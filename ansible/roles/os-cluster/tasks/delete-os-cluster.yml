@@ -1,0 +1,34 @@
+---
+# TODO: Make this accept a cluster dict as input, import from main for each
+# cluster dict, tag each import with namve of cluster.
+- name: Delete OpenShift cluster0 with openshift-install from assets dir
+  shell: 'openshift-install destroy cluster --dir {{ assets_dir }}/{{ cluster0.cluster_name }}'
+  async: 3600
+  poll: 0
+  register: delete_cluster0
+  environment:
+    AWS_PROFILE: openshift-dev
+
+- name: Delete OpenShift cluster1 with openshift-install from assets dir
+  shell: 'openshift-install destroy cluster --dir {{ assets_dir }}/{{ cluster1.cluster_name }}'
+  async: 3600
+  poll: 0
+  register: delete_cluster1
+  environment:
+    AWS_PROFILE: openshift-dev
+
+- name: Check on cluster0 async deletion
+  async_status:
+    jid: "{{ delete_cluster0.ansible_job_id }}"
+  register: delete_cluster0_result
+  until: delete_cluster0_result.finished
+  retries: 370
+  delay: 10
+
+- name: Check on cluster1 async deletion
+  async_status:
+    jid: "{{ delete_cluster1.ansible_job_id }}"
+  register: delete_cluster1_result
+  until: delete_cluster1_result.finished
+  retries: 370
+  delay: 10

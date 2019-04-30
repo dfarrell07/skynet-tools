@@ -1,0 +1,108 @@
+---
+- name: Create security group for SSH and ICMP access
+  os_security_group:
+    state: present
+    name: ssh_icmp
+    description: Let in SSH and ICMP
+    auth:
+      auth_url: "{{ auth_url }}"
+      password: "{{ os_password }}"
+      project_domain_id: "{{ project_domain_id }}"
+      project_name: "{{ project_name }}"
+      username: "{{ username }}"
+      user_domain_name: "{{ user_domain_name }}"
+
+- name: Create security group rule to allow ICMP
+  os_security_group_rule:
+    state: present
+    security_group: ssh_icmp
+    protocol: icmp
+    remote_ip_prefix: 0.0.0.0/0
+    auth:
+      auth_url: "{{ auth_url }}"
+      password: "{{ os_password }}"
+      project_domain_id: "{{ project_domain_id }}"
+      project_name: "{{ project_name }}"
+      username: "{{ username }}"
+      user_domain_name: "{{ user_domain_name }}"
+
+- name: Create security group rule to allow SSH
+  os_security_group_rule:
+    state: present
+    security_group: ssh_icmp
+    port_range_min: 22
+    port_range_max: 22
+    protocol: tcp
+    remote_ip_prefix: 0.0.0.0/0
+    auth:
+      auth_url: "{{ auth_url }}"
+      password: "{{ os_password }}"
+      project_domain_id: "{{ project_domain_id }}"
+      project_name: "{{ project_name }}"
+      username: "{{ username }}"
+      user_domain_name: "{{ user_domain_name }}"
+
+# TODO: Manually create ports with fixed/known IPs
+#       Or maybe need to dynamically find FIPs
+
+- name: Create network
+  os_network:
+    state: present
+    name: private_k8s_net
+    auth:
+      auth_url: "{{ auth_url }}"
+      password: "{{ os_password }}"
+      project_domain_id: "{{ project_domain_id }}"
+      project_name: "{{ project_name }}"
+      username: "{{ username }}"
+      user_domain_name: "{{ user_domain_name }}"
+
+- name: Create subnetwork
+  os_subnet:
+    state: present
+    name: private_k8s_subnet
+    network_name: private_k8s_net
+    cidr: 10.0.0.0/24
+    auth:
+      auth_url: "{{ auth_url }}"
+      password: "{{ os_password }}"
+      project_domain_id: "{{ project_domain_id }}"
+      project_name: "{{ project_name }}"
+      username: "{{ username }}"
+      user_domain_name: "{{ user_domain_name }}"
+
+- name: Create router
+  os_router:
+    state: present
+    name: private_k8s_net_router
+    network: fbf9bcc6-cbaa-4c24-8d56-8010915a6494
+    #network: 38.145.32.0/22
+    interfaces:
+      - private_k8s_subnet
+    auth:
+      auth_url: "{{ auth_url }}"
+      password: "{{ os_password }}"
+      project_domain_id: "{{ project_domain_id }}"
+      project_name: "{{ project_name }}"
+      username: "{{ username }}"
+      user_domain_name: "{{ user_domain_name }}"
+
+- name: Create VM on RDO Cloud
+  os_server:
+    state: present
+    name: "{{ item }}"
+    auth:
+      auth_url: "{{ auth_url }}"
+      password: "{{ os_password }}"
+      project_domain_id: "{{ project_domain_id }}"
+      project_name: "{{ project_name }}"
+      username: "{{ username }}"
+      user_domain_name: "{{ user_domain_name }}"
+    image: fdfd5d39-a76d-45df-abec-17f768ba3054
+    key_name: "dfarrell standard"
+    network: private_k8s_net
+    security_groups:
+      - ssh_icmp
+    flavor_ram: 4096
+  with_items:
+    - toolbox

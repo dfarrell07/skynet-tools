@@ -1,0 +1,31 @@
+---
+- name: Install openshift-install
+  unarchive:
+    src: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-install-linux-4.1.0-rc.0.tar.gz
+    remote_src: yes
+    dest: /usr/local/bin/
+  become: yes
+
+# TODO: Verify this is needed
+- name: Symlink openshift-install to /usr/bin for SSH shells
+  file:
+    src: /usr/local/bin/openshift-install
+    dest: /usr/bin/openshift-install
+    state: link
+  become: yes
+
+- name: Create AWS config dir
+  file:
+    path: .aws
+    state: directory
+  tags: [cluster1]
+
+- name: Instantiate RH AWS credentials template to AWS config dir
+  template:
+    src: aws-credentials-template.j2
+    dest: ".aws/credentials"
+
+- name: Copy RH AWS config to AWS config dir
+  copy:
+    src: aws-config
+    dest: ".aws/config"

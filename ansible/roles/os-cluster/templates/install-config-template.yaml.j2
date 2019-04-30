@@ -1,0 +1,24 @@
+apiVersion: v1beta3
+baseDomain: {{baseDomain}}
+compute:
+- name: worker
+  platform: {}
+  replicas: 3
+controlPlane:
+  name: master
+  platform: {}
+  replicas: 3
+metadata:
+  creationTimestamp: null
+  name: {{cluster_name}}
+networking:
+  clusterNetworks:
+  - cidr: {{cidr}}
+    hostSubnetLength: 9
+  machineCIDR: {{machine_cidr}}
+  serviceCIDR: {{service_cidr}}
+  type: {{network_type}}
+platform:
+  aws:
+    region: us-east-1
+pullSecret: '{{pullSecret}}'

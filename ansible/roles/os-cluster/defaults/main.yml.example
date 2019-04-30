@@ -1,0 +1,18 @@
+---
+assets_dir: .skynet-ansible-assets
+aws_access_key_id: YOURAWSKEYID
+aws_secret_access_key: YOURAWSSECRETKEY
+baseDomain: devcluster.openshift.com
+cluster0:
+  cluster_name: YOURUSERNAME-subm-0
+  cidr: 10.128.0.0/14
+  machine_cidr: 10.0.0.0/16
+  service_cidr: 172.30.0.0/16
+  network_type: OpenShiftSDN
+cluster1:
+  cluster_name: YOURUSERNAME-subm-1
+  cidr: 10.128.0.0/14
+  machine_cidr: 10.0.0.0/16
+  service_cidr: 172.30.0.0/16
+  network_type: OpenShiftSDN
+pullSecret: '{YOUR PULL SECRET}'

@@ -1,0 +1,4 @@
+---
+- hosts: rdo-vm-manager
+  roles:
+    - role: rdo-vm

@@ -1,0 +1,6 @@
+auth_url: https://phx2.cloud.rdoproject.org:13000/v3
+os_password: YOURRDOCLOUDPASSWORD
+project_domain_id: default
+project_name: YOURRDOCLOUDUSERNAME
+user_domain_name: Default
+username: YOURRDOCLOUDUSERNAME

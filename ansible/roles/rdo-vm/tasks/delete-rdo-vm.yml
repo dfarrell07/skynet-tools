@@ -1,0 +1,63 @@
+---
+- name: Delete VM on RDO Cloud
+  os_server:
+    state: absent
+    delete_fip: yes
+    name: "{{ item }}"
+    auth:
+      auth_url: "{{ auth_url }}"
+      password: "{{ os_password }}"
+      project_domain_id: "{{ project_domain_id }}"
+      project_name: "{{ project_name }}"
+      username: "{{ username }}"
+      user_domain_name: "{{ user_domain_name }}"
+  with_items:
+    - toolbox
+
+- name: Delete router
+  os_router:
+    state: absent
+    name: private_k8s_net_router
+    auth:
+      auth_url: "{{ auth_url }}"
+      password: "{{ os_password }}"
+      project_domain_id: "{{ project_domain_id }}"
+      project_name: "{{ project_name }}"
+      username: "{{ username }}"
+      user_domain_name: "{{ user_domain_name }}"
+
+- name: Delete subnetwork
+  os_subnet:
+    state: absent
+    name: private_k8s_subnet
+    auth:
+      auth_url: "{{ auth_url }}"
+      password: "{{ os_password }}"
+      project_domain_id: "{{ project_domain_id }}"
+      project_name: "{{ project_name }}"
+      username: "{{ username }}"
+      user_domain_name: "{{ user_domain_name }}"
+
+- name: Delete network
+  os_network:
+    state: absent
+    name: private_k8s_net
+    auth:
+      auth_url: "{{ auth_url }}"
+      password: "{{ os_password }}"
+      project_domain_id: "{{ project_domain_id }}"
+      project_name: "{{ project_name }}"
+      username: "{{ username }}"
+      user_domain_name: "{{ user_domain_name }}"
+
+- name: Delete security group for SSH and ICMP access
+  os_security_group:
+    state: absent
+    name: ssh_icmp
+    auth:
+      auth_url: "{{ auth_url }}"
+      password: "{{ os_password }}"
+      project_domain_id: "{{ project_domain_id }}"
+      project_name: "{{ project_name }}"
+      username: "{{ username }}"
+      user_domain_name: "{{ user_domain_name }}"

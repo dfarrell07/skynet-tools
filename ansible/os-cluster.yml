@@ -1,0 +1,5 @@
+---
+- hosts: os-cluster-manager
+  remote_user: centos
+  roles:
+    - role: os-cluster

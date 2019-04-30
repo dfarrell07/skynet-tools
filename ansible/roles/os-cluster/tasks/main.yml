@@ -1,0 +1,13 @@
+---
+- import_tasks: install-prereqs.yml
+  tags: [install-prereqs-os-cluster]
+- import_tasks: check-prereqs.yml
+  tags:
+    - install-prereqs-os-cluster
+    - check-prereqs-os-cluster
+    - create-os-cluster
+    - delete-os-cluster
+- import_tasks: create-os-cluster.yml
+  tags: [create-os-cluster]
+- import_tasks: delete-os-cluster.yml
+  tags: [delete-os-cluster]

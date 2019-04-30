@@ -1,0 +1,6 @@
+---
+- name: Verify the openshift-install binary is in path
+  shell: 'command -v openshift-install'
+
+- name: Show openshift-install version
+  shell: 'openshift-install version'

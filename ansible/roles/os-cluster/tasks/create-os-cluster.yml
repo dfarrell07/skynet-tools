@@ -1,0 +1,87 @@
+---
+# TODO: Make this accept a cluster dict as input, import from main for each
+# cluster dict, tag each import with name of cluster.
+- name: Create assets directory for openshift-installer cluster0 config
+  file:
+    path: "{{ assets_dir }}/{{ cluster0.cluster_name }}"
+    state: directory
+  tags: [cluster0]
+
+- name: Create assets directory for openshift-installer cluster1 config
+  file:
+    path: "{{ assets_dir }}/{{ cluster1.cluster_name }}"
+    state: directory
+  tags: [cluster1]
+
+# NB: Maintain the template, make sure it matches what the installer expects
+- name: Instantiate openshift-installer install-config template for cluster0
+  template:
+    src: install-config-template.yaml.j2
+    dest: "{{ assets_dir }}/{{ cluster0.cluster_name }}/install-config.yaml"
+  vars:
+    cidr: "{{ cluster0.cidr }}"
+    cluster_name: "{{ cluster0.cluster_name }}"
+    machine_cidr: "{{ cluster0.machine_cidr }}"
+    service_cidr: "{{ cluster0.service_cidr}}"
+    network_type: "{{ cluster0.network_type}}"
+  tags: [cluster0]
+
+# NB: Maintain the template, make sure it matches what the installer expects
+- name: Instantiate openshift-installer install-config template for cluster1
+  template:
+    src: install-config-template.yaml.j2
+    dest: "{{ assets_dir }}/{{ cluster1.cluster_name }}/install-config.yaml"
+  vars:
+    cidr: "{{ cluster1.cidr }}"
+    cluster_name: "{{ cluster1.cluster_name }}"
+    machine_cidr: "{{ cluster1.machine_cidr }}"
+    service_cidr: "{{ cluster1.service_cidr}}"
+    network_type: "{{ cluster1.network_type}}"
+  tags: [cluster1]
+
+# NB: It's not in Ansible's design to allow seeing the output of long-running
+# tasks until they complete. There is lots of discussion about it, but no great
+# solution.
+# https://github.com/ansible/ansible/issues/4870#issuecomment-282070975
+# https://github.com/ansible/ansible/issues/3887#issuecomment-39005404
+# For now will just have to accept Ansible's silent healthcheck and manually,
+# out of band, check the openshift-installer logs if we want more details.
+
+- name: Create OpenShift 4 cluster0 with openshift-install on AWS
+  shell: 'openshift-install create cluster --dir {{ assets_dir }}/{{ cluster0.cluster_name }}'
+  async: 3600
+  poll: 0
+  register: create_cluster0
+  environment:
+    AWS_PROFILE: openshift-dev
+  tags: [cluster0]
+
+- name: Create OpenShift 4 cluster1 with openshift-install on AWS
+  shell: 'openshift-install create cluster --dir {{ assets_dir }}/{{ cluster1.cluster_name }}'
+  async: 3600
+  poll: 0
+  register: create_cluster1
+  environment:
+    AWS_PROFILE: openshift-dev
+  tags: [cluster1]
+
+# TODO: Loop multiple tasks on async status result.finished, tail logs
+- name: Check on cluster0 async creation
+  async_status:
+    jid: "{{ create_cluster0.ansible_job_id }}"
+  register: create_cluster0_result
+  until: create_cluster0_result.finished
+  retries: 190
+  delay: 30
+  tags: [cluster0]
+
+- name: Check on cluster1 async creation
+  async_status:
+    jid: "{{ create_cluster1.ansible_job_id }}"
+  register: create_cluster1_result
+  until: create_cluster1_result.finished
+  retries: 190
+  delay: 30
+  tags: [cluster1]
+
+# TODO: Show cluster connection/auth info printed at end of log
