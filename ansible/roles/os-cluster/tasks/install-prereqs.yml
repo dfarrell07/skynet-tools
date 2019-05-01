@@ -18,7 +18,6 @@
   file:
     path: .aws
     state: directory
-  tags: [cluster1]
 
 - name: Instantiate RH AWS credentials template to AWS config dir
   template:
