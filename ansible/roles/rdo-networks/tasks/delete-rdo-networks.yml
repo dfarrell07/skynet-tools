@@ -1,0 +1,37 @@
+---
+- name: Delete routers
+  os_router:
+    cloud: rdocloud
+    state: absent
+    name: "{{ item.key  }}_router"
+    interfaces:
+      - "{{ item.key }}_subnet"
+  with_dict: "{{ networks }}"
+
+- name: Delete subnets
+  os_subnet:
+    cloud: rdocloud
+    state: absent
+    name: "{{ item.key }}_subnet"
+  with_dict: "{{ networks }}"
+
+- name: Delete networks
+  os_network:
+    cloud: rdocloud
+    state: absent
+    name: "{{ item.key }}_net"
+  with_dict: "{{ networks }}"
+
+- name: Delete project security groups
+  os_security_group:
+    cloud: rdocloud
+    state: absent
+    name: ssh_icmp
+    description: Let in SSH and ICMP
+    
+- name: Delete openshifts security groups
+  os_security_group:
+    cloud: rdocloud
+    state: absent
+    name: openshifts
+    description: Allow basic ports of openshift operation

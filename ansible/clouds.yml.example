@@ -1,0 +1,11 @@
+clouds:
+  rdocloud:
+    auth:
+      auth_url: https://phx2.cloud.rdoproject.org:13000/v2.0
+      username: myuser
+      password: SETYOURPASSHERE
+      project_name: myuser
+      #user_domain_name: Default
+      #project_domain_name: default
+    identity_api_version: "3"
+    region_name: regionOne

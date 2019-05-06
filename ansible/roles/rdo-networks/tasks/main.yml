@@ -1,0 +1,7 @@
+---
+- debug: var=networks
+- import_tasks: create-rdo-networks.yml
+  tags: [create-rdo-networks]
+
+- import_tasks: delete-rdo-networks.yml
+  tags: [delete-rdo-networks]
