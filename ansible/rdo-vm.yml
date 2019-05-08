@@ -1,4 +1,5 @@
 ---
 - hosts: rdo-vm-manager
   roles:
+    - role: rdo-networks
     - role: rdo-vm

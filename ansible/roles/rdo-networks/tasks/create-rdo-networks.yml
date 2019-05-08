@@ -1,0 +1,78 @@
+---
+- name: Create networks
+  os_network:
+    cloud: rdocloud
+    state: present
+    name: "{{ item.key }}_net"
+  with_dict: "{{ networks }}"
+
+- name: Create subnets
+  os_subnet:
+    cloud: rdocloud
+    state: present
+    name: "{{ item.key }}_subnet"
+    network_name: "{{ item.key }}_net"
+    cidr: "{{ item.value.cidr }}"
+  with_dict: "{{ networks }}"
+
+- name: Create routers
+  os_router:
+    cloud: rdocloud
+    state: present
+    name: "{{ item.key  }}_router"
+    network: 38.145.32.0/22
+    interfaces:
+      - "{{ item.key }}_subnet"
+  with_dict: "{{ networks }}"
+
+- name: "Setup project security groups"
+  os_security_group:
+    cloud: rdocloud
+    state: present
+    name: ssh_icmp
+    description: Let in SSH and ICMP
+
+- name: Create security group rule to allow ICMP
+  os_security_group_rule:
+    state: present
+    cloud: rdocloud
+    security_group: ssh_icmp
+    protocol: icmp
+    remote_ip_prefix: 0.0.0.0/0
+    
+- name: Create security group rule to allow SSH
+  os_security_group_rule:
+    cloud: rdocloud
+    state: present
+    security_group: ssh_icmp
+    port_range_min: 22
+    port_range_max: 22
+    protocol: tcp
+    remote_ip_prefix: 0.0.0.0/0
+
+- name: Create default egress rule
+  os_security_group_rule:
+    cloud: rdocloud
+    state: present
+    security_group: ssh_icmp
+    direction: egress
+
+- name: Setup openshifts security groups
+  os_security_group:
+    cloud: rdocloud
+    state: present
+    name: openshifts
+    description: Allow basic ports of openshift operation
+
+- name: Open HTTP, HTTPS and 8443 for openshift
+  os_security_group_rule: 
+    cloud: rdocloud
+    state: present
+    security_group: openshifts
+    protocol: tcp
+    port_range_min: "{{ item }}"
+    port_range_max: "{{ item }}"
+  with_items:
+    - 80
+    - 443
+    - 8443
