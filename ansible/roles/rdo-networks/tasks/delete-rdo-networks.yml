@@ -28,7 +28,7 @@
     state: absent
     name: ssh_icmp
     description: Let in SSH and ICMP
-    
+
 - name: Delete openshifts security groups
   os_security_group:
     cloud: rdocloud

@@ -39,7 +39,7 @@
     security_group: ssh_icmp
     protocol: icmp
     remote_ip_prefix: 0.0.0.0/0
-    
+
 - name: Create security group rule to allow SSH
   os_security_group_rule:
     cloud: rdocloud
@@ -65,7 +65,7 @@
     description: Allow basic ports of openshift operation
 
 - name: Open HTTP, HTTPS and 8443 for openshift
-  os_security_group_rule: 
+  os_security_group_rule:
     cloud: rdocloud
     state: present
     security_group: openshifts
