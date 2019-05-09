@@ -1,0 +1,46 @@
+---
+- name: Create VM group on RDO cloud
+  os_server:
+    cloud: rdocloud
+    state: present
+    name: "{{ item.key }}"
+    image: "{{ item.value.image | default('CentOS-7-x86_64-GenericCloud-1804_02') }}"
+    key_name: "{{ ssh_key_name }}"
+    nics:
+      - net-name: "{{ item.value.net }}"
+    auto_ip: yes
+    security_groups: "{{ item.value.security_groups | default (['ssh_icmp']) }}"
+    flavor: "{{ item.value.flavor }}"
+  with_dict: "{{ vms }}"
+  register: os_hosts
+
+- name: Create host list out of os_server output
+  set_fact:
+    hosts: >
+      {{ hosts|default([]) +
+        [ {'host': item.item.key,
+           'groups': item.item.value.groups,
+           'ip': item.server.public_v4} ]
+      }}
+  with_items: "{{ os_hosts.results }}"
+  loop_control:
+    label: "{{ item.item.key }} {{ item.item.value.groups }}"
+
+- name: Create openshift-ansible inventory
+  template:
+    src: "{{ create_inventory.template }}"
+    dest: "{{ create_inventory.dest }}"
+  when: create_inventory is defined
+
+- name: Add hosts to the runtime inventory
+  add_host:
+    name: '{{ item.host }}'
+    groups: '{{ item.groups }}'
+    ansible_host: "{{ item.ip }}"
+    ansible_user: centos
+    ansible_become: true
+    host_key_checking: false
+  with_items: "{{ hosts }}"
+  changed_when: False
+  when: add_to_runtime_inventory == true
+
