@@ -1,0 +1,17 @@
+---
+- name: Remove VM group on RDO cloud
+  os_server:
+    state: absent
+    name: "{{ item.key }}"
+    cloud: rdocloud
+  with_dict: "{{ vms }}"
+
+- name: Remove openshift-ansible inventory
+  file:
+    state: absent
+    path: "{{ create_inventory.dest }}"
+  when: create_inventory is defined
+
+- name: Remove the hosts output
+  set_fact:
+    hosts: []

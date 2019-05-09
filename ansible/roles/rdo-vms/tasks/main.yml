@@ -1,0 +1,5 @@
+---
+- import_tasks: create-rdo-vms.yml
+  tags: [create]
+- import_tasks: delete-rdo-vms.yml
+  tags: [delete]

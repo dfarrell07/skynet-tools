@@ -1,0 +1,49 @@
+[masters]
+{% for host in hosts if 'master' in host.groups %}
+{{ host.host }} ansible_ssh_host={{ host.ip }}
+{% endfor %}
+
+
+#[lb]
+#{% for host in hosts if 'master' in host.groups %}
+#{{ host.host }} ansible_ssh_host={{ host.ip }}
+#{% endfor %}
+
+[etcd]
+{% for host in hosts if 'master' in host.groups %}
+{{ host.host }} ansible_ssh_host={{ host.ip }}
+{% endfor %}
+
+[nodes]
+{% for host in hosts if 'master' in host.groups %}
+{{ host.host }} ansible_ssh_host={{ host.ip }} openshift_node_group_name="node-config-master"
+{% endfor %}
+
+{% for host in hosts if 'compute' in host.groups %}
+{{ host.host }} ansible_ssh_host={{ host.ip }} openshift_node_group_name="node-config-compute"
+{% endfor %}
+
+[OSEv3:children]
+masters
+nodes
+etcd
+#lb
+
+[OSEv3:vars]
+ansible_user=centos
+ansible_become=yes
+openshift_deployment_type=origin
+openshift_release="3.11"
+openshift_master_default_subdomain=openshift.{{ hosts[0].ip }}.xip.io
+openshift_enable_excluders=false
+openshift_master_public_api_url=https://{{ hosts[0].ip }}.xip.io:8443
+openshift_master_public_console_url=https://{{ hosts[0].ip }}.xip.io:8443
+openshift_public_hostname={{ hosts[0].ip }}.xip.io
+openshift_master_default_subdomain=apps.{{ hosts[0].ip }}.xip.io
+openshift_public_ip={{ hosts[0].ip }}
+openshift_web_console_install=false
+openshift_cluster_monitoring_operator_install=false
+openshift_enable_service_catalog=false
+openshift_web_console_install=false
+openshift_console_install=false
+debug_level=2
