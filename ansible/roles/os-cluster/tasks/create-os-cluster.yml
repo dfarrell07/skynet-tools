@@ -24,6 +24,9 @@
     machine_cidr: "{{ cluster0.machine_cidr }}"
     service_cidr: "{{ cluster0.service_cidr}}"
     network_type: "{{ cluster0.network_type}}"
+    num_workers: "{{ cluster0.num_workers}}"
+    num_masters: "{{ cluster0.num_masters}}"
+    region: "{{ cluster0.region}}"
   tags: [cluster0]
 
 # NB: Maintain the template, make sure it matches what the installer expects
@@ -37,6 +40,9 @@
     machine_cidr: "{{ cluster1.machine_cidr }}"
     service_cidr: "{{ cluster1.service_cidr}}"
     network_type: "{{ cluster1.network_type}}"
+    num_workers: "{{ cluster1.num_workers}}"
+    num_masters: "{{ cluster1.num_masters}}"
+    region: "{{ cluster1.region}}"
   tags: [cluster1]
 
 # NB: It's not in Ansible's design to allow seeing the output of long-running

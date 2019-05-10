@@ -9,10 +9,16 @@ cluster0:
   machine_cidr: 10.0.0.0/16
   service_cidr: 172.30.0.0/16
   network_type: OpenShiftSDN
+  num_workers: 3
+  num_masters: 3
+  region: us-east-1
 cluster1:
   cluster_name: YOURUSERNAME-subm-1
   cidr: 10.128.0.0/14
   machine_cidr: 10.0.0.0/16
   service_cidr: 172.30.0.0/16
   network_type: OpenShiftSDN
+  num_workers: 3
+  num_masters: 3
+  region: us-east-1
 pullSecret: '{YOUR PULL SECRET}'

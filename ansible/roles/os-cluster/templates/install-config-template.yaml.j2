@@ -3,11 +3,11 @@ baseDomain: {{baseDomain}}
 compute:
 - name: worker
   platform: {}
-  replicas: 3
+  replicas: {{num_workers}}
 controlPlane:
   name: master
   platform: {}
-  replicas: 3
+  replicas: {{num_masters}}
 metadata:
   creationTimestamp: null
   name: {{cluster_name}}
@@ -20,5 +20,5 @@ networking:
   type: {{network_type}}
 platform:
   aws:
-    region: us-east-1
+    region: {{region}}
 pullSecret: '{{pullSecret}}'
