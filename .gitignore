@@ -6,3 +6,6 @@
 
 # Credentials
 clouds.yml
+
+# Tox
+.tox/

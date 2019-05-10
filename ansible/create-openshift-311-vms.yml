@@ -4,7 +4,7 @@
     - role: rdo-networks
     - role: rdo-vms
   vars:
-    vms: 
+    vms:
       master:
         flavor: 'm1.xlarge'
         net: 'private_k8s_net'
@@ -16,12 +16,11 @@
       worker2:
         flavor: 'm1.large'
         net: 'private_k8s_net'
-        groups: ['compute', 'openshift']    
+        groups: ['compute', 'openshift']
     add_to_runtime_inventory: True
     create_inventory:
       template: openshift-ansible-3.11-inventory.j2
       dest: openshift-3.11-inventory
-      
   tasks:
     - debug: var=hosts
       tags: always
