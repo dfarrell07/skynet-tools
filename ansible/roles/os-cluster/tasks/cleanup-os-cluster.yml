@@ -1,0 +1,15 @@
+---
+# NB: Don't run this before deleting any running clusters!
+# If you loose the cluster assets, delete instances from AWS web UI.
+
+- name: Delete assets directory for openshift-installer cluster0 config
+  file:
+    path: "{{ assets_dir }}/{{ cluster0.cluster_name }}"
+    state: absent
+  tags: [cluster0]
+
+- name: Delete assets directory for openshift-installer cluster1 config
+  file:
+    path: "{{ assets_dir }}/{{ cluster1.cluster_name }}"
+    state: absent
+  tags: [cluster1]

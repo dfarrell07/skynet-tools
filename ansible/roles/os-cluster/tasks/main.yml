@@ -13,3 +13,5 @@
   tags: [check-os-cluster]
 - import_tasks: delete-os-cluster.yml
   tags: [delete-os-cluster]
+- import_tasks: cleanup-os-cluster.yml
+  tags: [cleanup-os-cluster]
