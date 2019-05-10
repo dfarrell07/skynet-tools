@@ -3,10 +3,9 @@
   os_server:
     cloud: rdocloud
     state: present
-    name: "{{ item.key }}"
-    image: "{{ item.value.image | default('CentOS-7-x86_64-GenericCloud-1804_02') }}"
-    # TODO: Support this, but optionally. Default should be not overriding.
-    #key_name: "{{ ssh_key_name }}"
+    name: "{{ item.value.name }}"
+    image: "{{ item.value.image | default('CentOS-7-x86_64-GenericCloud-1804_02') }}"
+    key_name: "{{ ssh_key_name }}"
     nics:
       - net-name: "{{ item.value.net }}"
     auto_ip: yes
@@ -19,18 +18,18 @@
   set_fact:
     hosts: >
       {{ hosts|default([]) +
-        [ {'host': item.item.key,
+        [ {'host': item.item.value.name,
            'groups': item.item.value.groups,
            'ip': item.server.public_v4} ]
       }}
   with_items: "{{ os_hosts.results }}"
   loop_control:
-    label: "{{ item.item.key }} {{ item.item.value.groups }}"
+    label: "{{ item.item.value.name }} {{ item.item.value.groups }}"
 
 - name: Create openshift-ansible inventory
   template:
     src: "{{ create_inventory.template }}"
-    dest: "{{ create_inventory.dest }}"
+    dest: "{{ create_inventory.dest }}"
   when: create_inventory is defined
 
 - name: Add hosts to the runtime inventory
@@ -41,7 +40,15 @@
     ansible_user: centos
     ansible_become: true
     host_key_checking: false
+    ansible_ssh_extra_args: '-o StrictHostKeyChecking=no'
   with_items: "{{ hosts }}"
   changed_when: False
   when: add_to_runtime_inventory == true
 
+- name: waiting for server to come up
+  local_action: wait_for host="{{ item.ip }}"
+            port=22
+            state=started
+            delay=2
+            timeout=300
+  with_items: "{{ hosts }}"

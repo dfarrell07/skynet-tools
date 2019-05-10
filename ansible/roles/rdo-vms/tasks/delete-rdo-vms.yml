@@ -2,7 +2,7 @@
 - name: Remove VM group on RDO cloud
   os_server:
     state: absent
-    name: "{{ item.key }}"
+    name: "{{ item.value.name }}"
     cloud: rdocloud
   with_dict: "{{ vms }}"
 

@@ -1,0 +1,22 @@
+---
+- name: Ensure basic packages
+  yum: name=epel-release state=present
+
+- name: Ensure basic packages 2
+  yum:
+    name: ['ansible', 'pyOpenSSL', 'python-cryptography', 'python-lxml', 'git', 'NetworkManager']
+    state: present
+
+- name: Enable networkmanager
+  service: name=NetworkManager state=started enabled=true
+
+# workaround to make sure /etc/hosts resolves all host names on the deployment, since
+# RDOcloud does not resolve those properly through the tenant network DNS server
+
+- name: "Build hosts file"
+  lineinfile:
+    dest: "/etc/hosts"
+    line: "{{ hostvars[item].ansible_default_ipv4.address }} {{ hostvars[item].ansible_facts.nodename }}"
+    state: present
+  when: hostvars[item].ansible_default_ipv4 is defined and hostvars[item].ansible_default_ipv4.address is defined
+  with_items: "{{ groups[cluster_name] }}"

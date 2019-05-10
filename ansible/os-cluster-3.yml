@@ -1,0 +1,84 @@
+---
+- name: Prepare the hosts themselves
+  hosts: "{{ manager_host | default('localhost') }}"
+  roles:
+    - role: rdo-networks
+    - role: rdo-vms
+  vars:
+    vms:
+      master:
+        name: "{{ cluster_name }}_master"
+        flavor: 'm1.large'
+        net: 'private_k8s_net'
+        groups: ['master', 'openshift', "{{ cluster_name }}"]
+        security_groups: ['ssh_icmp', 'openshifts']
+      worker1:
+        name: "{{ cluster_name }}_worker1"
+        flavor: 'm1.medium'
+        net: 'private_k8s_net'
+        groups: ['compute', 'openshift', "{{ cluster_name }}"]
+        security_groups: ['ssh_icmp', 'openshifts']
+      worker2:
+        name: "{{ cluster_name }}_worker2"
+        flavor: 'm1.medium'
+        net: 'private_k8s_net'
+        groups: ['compute', 'openshift', "{{ cluster_name }}"]
+        security_groups: ['ssh_icmp', 'openshifts']
+    add_to_runtime_inventory: True
+    create_inventory:
+      template: openshift-ansible-3.11-inventory.j2
+      dest: "inventory/{{ cluster_name }}-openshift-3.11-inventory"
+
+- name: Prepare hosts of cluster for openshift-ansible
+  hosts: "{{ cluster_name }}"
+  roles:
+    - prepare_host_openshift_ansible
+  tags:
+    - create-os-cluster
+
+- name: Checkout openshift ansible on the manager host
+  hosts: "{{ manager_host | default('localhost') }}"
+  tasks:
+    - name: Checkout openstack-ansible on a specific version
+      git:
+        repo: https://github.com/openshift/openshift-ansible
+        version: release-3.11
+        dest: /tmp/openshift-ansible-3.11
+        force: yes
+
+    - name: Execute the prerequisites playbook
+      shell: >
+        set -x &&
+        set -o pipefail &&
+        export ANSIBLE_FORCE_COLOR=true &&
+        ansible-playbook -i inventory/{{ cluster_name }}-openshift-3.11-inventory \
+                 /tmp/openshift-ansible-3.11/playbooks/prerequisites.yml \
+                 2>&1 >> /tmp/openshift-ansible-3.11.{{ cluster_name }}.log
+
+    - name: Execute the deploy cluster playbook
+      shell: >
+        set -x &&
+        set -o pipefail &&
+        export ANSIBLE_FORCE_COLOR=true &&
+        ansible-playbook -i inventory/{{ cluster_name }}-openshift-3.11-inventory \
+                 /tmp/openshift-ansible-3.11/playbooks/deploy_cluster.yml \
+                 2>&1 >> /tmp/openshift-ansible-3.11.{{ cluster_name }}.log
+
+    - name: ansible create local directory for credentials
+      local_action:
+        module: file
+        path: ../creds
+        state: directory
+  tags:
+    - create-os-cluster
+
+- name: Copy the kubeconfig files to the credentials directory
+  hosts: "{{ cluster_name}}_master"
+  tasks:
+    - name: "fetch kubeconfig files"
+      fetch:
+        src: /home/centos/.kube/config
+        dest: ../creds/kubeconfig-{{ inventory_hostname }}
+        flat: true
+  tags:
+    - create-os-cluster

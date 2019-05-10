@@ -15,3 +15,10 @@ ansible/group_vars/rdo-vm
 
 # Secrets for RH AWS, personal instance of main.yml.example
 ansible/roles/os-cluster/defaults/main.yml
+
+# Credentials for deployed kubernetes/openshifts
+creds/*
+
+# Inventories and details
+ansible/inventory/.ssh_key_name
+ansible/inventory/*-inventory

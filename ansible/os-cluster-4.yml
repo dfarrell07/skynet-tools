@@ -1,5 +1,5 @@
 ---
-- hosts: os-cluster-manager
+- hosts: "{{ manager_host | default('localhost') }}"
   remote_user: centos
   roles:
     - role: os-cluster

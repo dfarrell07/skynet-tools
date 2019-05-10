@@ -16,11 +16,12 @@
 
 [nodes]
 {% for host in hosts if 'master' in host.groups %}
-{{ host.host }} ansible_ssh_host={{ host.ip }} openshift_node_group_name="node-config-master"
+# we make the master AIO because E2E testing tries to schedule pods to the master too expecting it to be labeled as worked.
+{{ host.host }} ansible_ssh_host={{ host.ip }} openshift_node_group_name="node-config-all-in-one" host_key_checking=False ansible_ssh_extra_args='-o StrictHostKeyChecking=no'
 {% endfor %}
 
 {% for host in hosts if 'compute' in host.groups %}
-{{ host.host }} ansible_ssh_host={{ host.ip }} openshift_node_group_name="node-config-compute"
+{{ host.host }} ansible_ssh_host={{ host.ip }} openshift_node_group_name="node-config-compute" host_key_checking=False ansible_ssh_extra_args='-o StrictHostKeyChecking=no'
 {% endfor %}
 
 [OSEv3:children]
@@ -28,6 +29,12 @@ masters
 nodes
 etcd
 #lb
+
+[{{ cluster_name }}:children]
+nodes
+
+[openshift:children]
+nodes
 
 [OSEv3:vars]
 ansible_user=centos
@@ -47,3 +54,20 @@ openshift_enable_service_catalog=false
 openshift_web_console_install=false
 openshift_console_install=false
 debug_level=2
+
+# poors man cluster
+openshift_disable_check=disk_availability,memory_availability
+openshift_check_min_host_disk_gb=1
+openshift_check_min_host_memory_gb=1
+
+
+{% if pod_cidr is defined %}
+# default is 10.128.0.0/14
+osm_cluster_network_cidr={{ pod_cidr }}
+{% endif %}
+
+
+{% if service_cidr is defined %}
+# default is 172.30.0.0/16, avoid 172.17.0.0/16 (docker0 range)
+openshift_portal_net={{ service_cidr }}
+{% endif %}
