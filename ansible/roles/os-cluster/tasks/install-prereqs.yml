@@ -4,6 +4,7 @@
     src: https://mirror.openshift.com/pub/openshift-v4/clients/ocp/latest/openshift-install-linux-4.1.0-rc.0.tar.gz
     remote_src: yes
     dest: /usr/local/bin/
+    mode: 0755
   become: yes
 
 - name: Create AWS config dir
