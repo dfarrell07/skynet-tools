@@ -9,5 +9,7 @@
     - delete-os-cluster
 - import_tasks: create-os-cluster.yml
   tags: [create-os-cluster]
+- import_tasks: check-os-cluster.yml
+  tags: [check-os-cluster]
 - import_tasks: delete-os-cluster.yml
   tags: [delete-os-cluster]

@@ -1,0 +1,36 @@
+---
+- name: Verify oc CLI and auth config work for cluster0
+  shell: oc config view
+  environment:
+    KUBECONFIG: "{{ assets_dir }}/{{ cluster0.cluster_name }}/auth/kubeconfig"
+  tags: [cluster0]
+
+- name: Verify oc CLI and auth config work for cluster1
+  shell: oc config view
+  environment:
+    KUBECONFIG: "{{ assets_dir }}/{{ cluster1.cluster_name }}/auth/kubeconfig"
+  tags: [cluster1]
+
+- name: Verify kubectl CLI and auth config work for cluster0
+  shell: kubectl config view
+  environment:
+    KUBECONFIG: "{{ assets_dir }}/{{ cluster0.cluster_name }}/auth/kubeconfig"
+  tags: [cluster0]
+
+- name: Verify kubectl CLI and auth config work for cluster1
+  shell: kubectl config view
+  environment:
+    KUBECONFIG: "{{ assets_dir }}/{{ cluster1.cluster_name }}/auth/kubeconfig"
+  tags: [cluster1]
+
+- name: Show cluster0 oc status
+  shell: oc status
+  environment:
+    KUBECONFIG: "{{ assets_dir }}/{{ cluster0.cluster_name }}/auth/kubeconfig"
+  tags: [cluster0]
+
+- name: Show cluster1 oc status
+  shell: oc status
+  environment:
+    KUBECONFIG: "{{ assets_dir }}/{{ cluster1.cluster_name }}/auth/kubeconfig"
+  tags: [cluster1]
