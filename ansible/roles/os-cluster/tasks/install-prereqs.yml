@@ -6,14 +6,6 @@
     dest: /usr/local/bin/
   become: yes
 
-# TODO: Verify this is needed
-- name: Symlink openshift-install to /usr/bin for SSH shells
-  file:
-    src: /usr/local/bin/openshift-install
-    dest: /usr/bin/openshift-install
-    state: link
-  become: yes
-
 - name: Create AWS config dir
   file:
     path: .aws
