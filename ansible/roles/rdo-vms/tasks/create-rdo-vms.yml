@@ -5,7 +5,8 @@
     state: present
     name: "{{ item.key }}"
     image: "{{ item.value.image | default('CentOS-7-x86_64-GenericCloud-1804_02') }}"
-    key_name: "{{ ssh_key_name }}"
+    # TODO: Support this, but optionally. Default should be not overriding.
+    #key_name: "{{ ssh_key_name }}"
     nics:
       - net-name: "{{ item.value.net }}"
     auto_ip: yes
