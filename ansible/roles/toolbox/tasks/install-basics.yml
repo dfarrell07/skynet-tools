@@ -44,8 +44,3 @@
   yum:
     name: tmux
   become: yes
-
-- name: Install htop
-  yum:
-    name: htop
-  become: yes
