@@ -22,16 +22,16 @@
     name: "{{ item.key }}_net"
   with_dict: "{{ networks }}"
 
-- name: Delete project security groups
+- name: Delete security group for SSH and ICMP access
   os_security_group:
     cloud: rdocloud
     state: absent
     name: ssh_icmp
     description: Let in SSH and ICMP
 
-- name: Delete openshifts security groups
+- name: Delete OpenShift security group
   os_security_group:
     cloud: rdocloud
     state: absent
     name: openshifts
-    description: Allow basic ports of openshift operation
+    description: Allow basic ports for OpenShift operation
