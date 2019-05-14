@@ -1,0 +1,210 @@
+---
+- name: Wait for ssh connection
+  wait_for_connection:
+    delay: 60
+    timeout: 300
+
+- name: Gathering facts
+  setup:
+
+- name: Gathering ec2 facts
+  ec2_metadata_facts:
+
+#- name: Upgrade all packages
+#  yum:
+#    name: '*'
+#    state: latest
+
+- name: Disable SELinux
+  command: setenforce 0
+
+- name: Disable SELinux config
+  lineinfile:
+    path: /etc/selinux/config
+    regexp: '^SELINUX='
+    line: 'SELINUX=disabled'
+
+- name: Enable br_netfilter kernel module
+  command: modprobe br_netfilter
+
+- name: Update kernel settings net.bridge.bridge-nf-call-iptables
+  sysctl:
+    name: net.bridge.bridge-nf-call-iptables
+    value: 1
+    sysctl_set: yes
+    state: present
+    reload: yes
+
+- name: update kernel settings net.bridge.bridge-nf-call-ip6tables
+  sysctl:
+    name: net.bridge.bridge-nf-call-ip6tables
+    value: 1
+    sysctl_set: yes
+    state: present
+    reload: yes
+
+- name: Remove swapfile from /etc/fstab
+  mount:
+    name: "{{ item }}"
+    fstype: swap
+    state: absent
+  with_items:
+    - swap
+    - none
+
+- name: Disable swap
+  command: swapoff -a
+
+- name: Install EPEL release
+  yum:
+    name: epel-release
+
+- name: Add Docker repo
+  get_url:
+    url: https://download.docker.com/linux/centos/docker-ce.repo
+    dest: /etc/yum.repos.d/docer-ce.repo
+
+- name: Base packages
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - curl
+      - net-tools
+      - bind-utils
+      - telnet
+      - vim
+      - wget
+      - yum-utils
+      - device-mapper-persistent-data
+      - lvm2
+      - docker-ce
+
+- name: Add {{ aws_ssh_user }} user to docker group
+  user:
+    name: "{{ aws_ssh_user }}"
+    group: docker
+
+- name: Create kubernetes repo
+  shell:
+    cmd: |
+      cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+      [kubernetes]
+      name=Kubernetes
+      baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+      enabled=1
+      gpgcheck=1
+      repo_gpgcheck=1
+      gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
+              https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+      EOF
+
+- name: Install kubernetes {{ kube_version }} packages
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - kubelet
+      - kubeadm
+      - kubectl
+
+- name: Enable docker service
+  systemd:
+    name: docker
+    enabled: yes
+    state: started
+
+- name: Create kubeadm init config
+  template:
+    src: "{{ role_path }}/templates/kubeadm-init.j2"
+    dest: /tmp/kubeadm-init.yaml
+
+- name: Initialize the Kubernetes cluster using kubeadm custom config
+  command: creates="/etc/kubernetes/admin.conf" kubeadm init --config=/tmp/kubeadm-init.yaml
+
+- name: Enable kubelet service
+  systemd:
+    name: kubelet
+    enabled: yes
+    state: started
+
+- name: Creates kube directory
+  file:
+    path: /home/{{ aws_ssh_user }}/.kube/
+    owner: "{{ aws_ssh_user }}"
+    group: "{{ aws_ssh_user }}"
+    state: directory
+
+- name: Setup kubeconfig for {{ aws_ssh_user }} user
+  copy:
+    remote_src: true
+    src: /etc/kubernetes/admin.conf
+    dest: /home/{{ aws_ssh_user }}/.kube/admin.conf
+    owner: "{{ aws_ssh_user }}"
+    group: "{{ aws_ssh_user }}"
+    mode: 0755
+
+- name: Adding global variables and aliases
+  lineinfile:
+    dest: /etc/bashrc
+    line: "{{ item }}"
+  with_items:
+    - "alias k=kubectl"
+    - "alias vi=vim"
+    - "export KUBECONFIG=$KUBECONFIG:/home/{{ aws_ssh_user }}/.kube/admin.conf"
+
+- name: Create flannel config
+  template:
+    src: "{{ role_path }}/templates/flannel.j2"
+    dest: /tmp/flannel.yaml
+
+- name: Install Flannel pod network
+  become: false
+  command: kubectl apply -f /tmp/flannel.yaml
+
+- name: Create aws ebs default storage provider
+  become: false
+  command: kubectl apply -f https://raw.githubusercontent.com/kubernetes/kubernetes/master/cluster/addons/storage-class/aws/default.yaml
+
+- name: Creates directory /opt/code
+  file:
+    path: /opt/code
+    state: directory
+    owner: "{{ aws_ssh_user }}"
+    group: "{{ aws_ssh_user }}"
+
+- name: Copy examples to /opt/code
+  copy:
+    src: "{{ role_path }}/files/code/"
+    dest: /opt/code
+    owner: "{{ aws_ssh_user }}"
+    group: "{{ aws_ssh_user }}"
+
+- name: Get ca cert sha256
+  shell: openssl x509 -pubkey -in /etc/kubernetes/pki/ca.crt | openssl rsa -pubin -outform der 2>/dev/null | openssl dgst -sha256 -hex | sed 's/^.* //'
+  register: discovery_token_ca_cert_hash
+
+- name: Wait for all control-plane pods become created
+  become: false
+  shell: "kubectl get pods -n kube-system -l tier=control-plane --output=jsonpath='{.items[*].metadata.name}'"
+  register: control_plane_pods_created
+  until: item in control_plane_pods_created.stdout
+  retries: 10
+  delay: 30
+  with_items:
+    - etcd
+    - kube-apiserver
+    - kube-controller-manager
+    - kube-scheduler
+
+- name: Wait for control-plane pods become ready
+  become: false
+  shell: "kubectl wait -n kube-system --for=condition=Ready pods -l tier=control-plane --timeout=600s"
+  register: control_plane_pods_ready
+
+- debug: var=control_plane_pods_ready.stdout_lines
+
+- name: Add variables to dummy host
+  add_host:
+    name: "master"
+    discovery_token_ca_cert_hash: "{{ discovery_token_ca_cert_hash.stdout }}"

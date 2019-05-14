@@ -1,0 +1,130 @@
+---
+- name: Wait for ssh connection
+  wait_for_connection:
+    timeout: 300
+
+- name: Gathering facts
+  setup:
+
+- name: Gathering ec2 facts
+  ec2_metadata_facts:
+
+#- name: Upgrade all packages
+#  yum:
+#    name: '*'
+#    state: latest
+
+- name: Disable SELinux
+  command: setenforce 0
+
+- name: Disable SELinux config
+  lineinfile:
+    path: /etc/selinux/config
+    regexp: '^SELINUX='
+    line: 'SELINUX=disabled'
+
+- name: Enable br_netfilter kernel module
+  command: modprobe br_netfilter
+
+- name: update kernel settings
+  sysctl:
+    name: net.bridge.bridge-nf-call-iptables
+    value: 1
+    sysctl_set: yes
+    state: present
+    reload: yes
+
+- name: update kernel settings
+  sysctl:
+    name: net.bridge.bridge-nf-call-ip6tables
+    value: 1
+    sysctl_set: yes
+    state: present
+    reload: yes
+
+- name: Remove swapfile from /etc/fstab
+  mount:
+    name: "{{ item }}"
+    fstype: swap
+    state: absent
+  with_items:
+    - swap
+    - none
+
+- name: Disable swap
+  command: swapoff -a
+
+- name: Install EPEL release
+  yum:
+    name: epel-release
+
+- name: Add Docker repo
+  get_url:
+    url: https://download.docker.com/linux/centos/docker-ce.repo
+    dest: /etc/yum.repos.d/docer-ce.repo
+
+- name: Base packages
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - curl
+      - net-tools
+      - bind-utils
+      - telnet
+      - vim
+      - wget
+      - yum-utils
+      - device-mapper-persistent-data
+      - lvm2
+      - docker-ce
+
+- name: Add {{ aws_ssh_user }} user to docker group
+  user:
+    name: "{{ aws_ssh_user }}"
+    group: docker
+
+- name: Create kubernetes repo
+  shell:
+    cmd: |
+      cat <<EOF > /etc/yum.repos.d/kubernetes.repo
+      [kubernetes]
+      name=Kubernetes
+      baseurl=https://packages.cloud.google.com/yum/repos/kubernetes-el7-x86_64
+      enabled=1
+      gpgcheck=1
+      repo_gpgcheck=1
+      gpgkey=https://packages.cloud.google.com/yum/doc/yum-key.gpg
+              https://packages.cloud.google.com/yum/doc/rpm-package-key.gpg
+      EOF
+
+- name: Install kubernetes packages
+  yum:
+    name: "{{ packages }}"
+  vars:
+    packages:
+      - kubelet
+      - kubeadm
+      - kubectl
+
+- name: Enable docker service
+  systemd:
+    name: docker
+    enabled: yes
+    state: started
+
+- name: Create join config
+  template:
+    src: "{{ role_path }}/templates/join-config.j2"
+    dest: /tmp/join-config.yaml
+
+- name: Join node to cluster
+  command: creates="/etc/kubernetes/bootstrap-kubelet.conf" kubeadm join --config=/tmp/join-config.yaml
+
+- name: Enable kubelet service
+  systemd:
+    name: kubelet
+    enabled: yes
+    state: started
+
+#- debug: var="discovery_token_ca_cert_hash"

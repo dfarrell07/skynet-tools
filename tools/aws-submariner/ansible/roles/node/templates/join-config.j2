@@ -1,0 +1,11 @@
+apiVersion: kubeadm.k8s.io/v1beta1
+kind: JoinConfiguration
+discovery:
+  bootstrapToken:
+    token: {{ join_token }}
+    apiServerEndpoint: {{ master_internal_ip }}:{{ master_bind_port }}
+    caCertHashes:
+      - "sha256:{{ hostvars['master']['discovery_token_ca_cert_hash'] }}"
+nodeRegistration:
+  kubeletExtraArgs:
+    cloud-provider: aws

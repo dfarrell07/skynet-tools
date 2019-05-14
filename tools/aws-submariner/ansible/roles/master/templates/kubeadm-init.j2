@@ -1,0 +1,34 @@
+apiVersion: kubeadm.k8s.io/v1beta1
+kind: InitConfiguration
+bootstrapTokens:
+- token: {{ join_token }}
+  description: "worker join token managed by terraform."
+  ttl: "0"
+localAPIEndpoint:
+  advertiseAddress: {{ ansible_eth0.ipv4.address }}
+  bindPort: {{ master_bind_port }}
+nodeRegistration:
+  name: {{ ansible_fqdn }}
+  kubeletExtraArgs:
+    cloud-provider: aws
+---
+apiVersion: kubeadm.k8s.io/v1beta1
+kind: ClusterConfiguration
+apiServer:
+  certSANs:
+  - {{ ansible_fqdn }}
+  - {{ ansible_eth0.ipv4.address }}
+  - {{ ansible_ec2_public_ipv4 }}
+  - {{ ansible_ec2_public_hostname }}
+  extraArgs:
+    cloud-provider: aws
+clusterName: {{ cluster_name }}
+controllerManager:
+  extraArgs:
+    cloud-provider: aws
+    configure-cloud-routes: "false"
+    address: 0.0.0.0
+kubernetesVersion: {{ kube_version }}
+networking:
+  podSubnet: {{ pod_cidr }}
+  serviceSubnet: {{ service_cidr }}

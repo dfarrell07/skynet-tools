@@ -1,0 +1,37 @@
+---
+- hosts: masters
+  become: yes
+  become_user: root
+  become_method: sudo
+  gather_facts: no
+  roles:
+    - master
+    - helm
+
+- hosts: nodes
+  become: yes
+  become_user: root
+  become_method: sudo
+  gather_facts: no
+  roles:
+    - node
+
+- hosts: brokers
+  become: yes
+  become_user: root
+  become_method: sudo
+  gather_facts: no
+  roles:
+    - broker
+
+- hosts: gateway-masters
+  become: yes
+  become_user: root
+  become_method: sudo
+  gather_facts: no
+  vars:
+    submariner_broker_ca: "{{ lookup('file', './tmp/submariner_broker_ca') }}"
+    submariner_broker_url: "{{ lookup('file', './tmp/submariner_broker_url') }}"
+    submariner_broker_token: "{{ lookup('file', './tmp/submariner_broker_token') }}"
+  roles:
+    - gateway

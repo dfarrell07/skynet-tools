@@ -1,0 +1,52 @@
+---
+- name: Wait for ssh connection
+  wait_for_connection:
+    timeout: 300
+
+- name: Create tiller service account
+  become: false
+  command: kubectl -n kube-system create sa tiller
+  register: result
+  changed_when: "'created' in result.stdout"
+  failed_when: "result.rc != 0 and 'already exists' not in result.stderr"
+
+- name: Create tiller clusterrolebinding
+  become: false
+  command: |
+    kubectl create clusterrolebinding tiller
+    --clusterrole=cluster-admin
+    --serviceaccount=kube-system:tiller
+  register: result
+  changed_when: "'created' in result.stdout"
+  failed_when: "result.rc != 0 and 'already exists' not in result.stderr"
+
+- name: Download helm {{ helm_version }}
+  unarchive:
+    src: "{{ helm_url }}"
+    dest: /tmp
+    copy: no
+
+- name: Copy helm binary to /usr/bin/
+  copy:
+    src: /tmp/linux-amd64/helm
+    dest: /usr/bin/
+    mode: 0755
+    remote_src: yes
+
+- name: Install or upgrade tiller
+  become: false
+  command: helm init --service-account tiller --upgrade
+
+- name: Add submariner repo
+  become: false
+  command: helm repo add submariner-latest https://releases.rancher.com/submariner-charts/latest
+  register: result
+  changed_when: "'\"submariner-latest\" has been added to your repositories' in result.stdout"
+  failed_when: "result.rc != 0 or '\"submariner-latest\" has been added to your repositories' not in result.stdout"
+
+- name: Update helm repos
+  become: false
+  command: helm repo update
+  register: result
+  changed_when: "'\"submariner-latest\"' in result.stdout"
+  failed_when: "result.rc != 0 or '\"submariner-latest\"' not in result.stdout"

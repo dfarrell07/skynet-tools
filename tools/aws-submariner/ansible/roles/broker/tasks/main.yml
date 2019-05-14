@@ -1,0 +1,61 @@
+---
+- name: Wait for ssh connection
+  wait_for_connection:
+    timeout: 300
+
+- name: Gathering ec2 facts
+  ec2_metadata_facts:
+
+- name: Wait for tiller to become created
+  become: false
+  shell: "kubectl get pods -n kube-system -l app=helm --output=jsonpath='{.items[*].metadata.name}'"
+  register: helm_pods_created
+  until: helm_pods_created.stdout
+  retries: 30
+  delay: 30
+
+- name: Wait for tiller to become ready
+  become: false
+  shell: "kubectl wait -n kube-system --for=condition=Ready pods -l app=helm --timeout=600s"
+  register: helm_pods_ready
+
+- debug: var=helm_pods_ready.stdout_lines
+
+- name: Update helm repos
+  become: false
+  command: helm repo update
+  register: result
+  changed_when: "'\"submariner-latest\"' in result.stdout"
+  failed_when: "result.rc != 0 or '\"submariner-latest\"' not in result.stdout"
+
+- name: Install broker
+  become: false
+  command: |
+    helm install submariner-latest/submariner-k8s-broker \
+    --name {{ submariner_broker_ns }} \
+    --namespace {{ submariner_broker_ns }}
+  register: result
+  changed_when: "'created' in result.stdout"
+  failed_when: "result.rc != 0 and 'already exists' not in result.stderr"
+
+- name: Get SUBMARINER_BROKER_CA
+  become: false
+  shell: kubectl -n {{ submariner_broker_ns }} get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='{{ submariner_broker_ns }}-client')].data['ca\.crt']}"
+  register: submariner_broker_ca
+
+- name: Copy SUBMARINER_BROKER_CA to local file
+  sudo: no
+  local_action: copy content="{{ submariner_broker_ca.stdout }}" dest="./tmp/submariner_broker_ca"
+
+- name: Get SUBMARINER_BROKER_TOKEN
+  become: false
+  shell: kubectl -n {{ submariner_broker_ns }} get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='{{ submariner_broker_ns }}-client')].data.token}"|base64 --decode
+  register: submariner_broker_token
+
+- name: Copy SUBMARINER_BROKER_TOKEN to local file
+  sudo: no
+  local_action: copy content="{{ submariner_broker_token.stdout }}" dest="./tmp/submariner_broker_token"
+
+- name: Copy SUBMARINER_BROKER_URL to local file
+  sudo: no
+  local_action: copy content="{{ ansible_ec2_public_hostname }}:6443" dest="./tmp/submariner_broker_url"
