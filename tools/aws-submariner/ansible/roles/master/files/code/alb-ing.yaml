@@ -1,0 +1,22 @@
+apiVersion: extensions/v1beta1
+kind: Ingress
+metadata:
+  annotations:
+    kubernetes.io/ingress.class: alb
+    alb.ingress.kubernetes.io/scheme: internet-facing
+    alb.ingress.kubernetes.io/target-group-attributes: deregistration_delay.timeout_seconds=30
+    alb.ingress.kubernetes.io/load-balancer-attributes: idle_timeout.timeout_seconds=60
+  name: prow-ing
+  namespace: default
+spec:
+  rules:
+    - http:
+        paths:
+          - backend:
+              serviceName: hook
+              servicePort: 8888
+            path: /hook
+          - backend:
+              serviceName: deck
+              servicePort: 80
+            path: /*
