@@ -11,7 +11,8 @@ provider "aws" {
 }
 
 locals {
-  key_name = "netwiz.key"
+  key_name    = "netwiz.key"
+  allowed_ips = ["1.2.3.4/32"]
 }
 
 module "aws-cluster1" {
@@ -22,10 +23,11 @@ module "aws-cluster1" {
   key_name             = "${local.key_name}"
   master_instance_type = "t2.medium"
   worker_instance_type = "t2.medium"
-  number_workers_nodes = "1"
+  number_workers_nodes = "2"
   service_cidr         = "100.96.0.0/16"
   pod_cidr             = "10.246.0.0/16"
-  kube_version         = "v1.14.1"
+  kube_version         = "1.14.1"
+  allowed_ips          = "${local.allowed_ips}"
 }
 
 module "aws-cluster2" {
@@ -39,7 +41,8 @@ module "aws-cluster2" {
   number_workers_nodes = "1"
   service_cidr         = "100.97.0.0/16"
   pod_cidr             = "10.247.0.0/16"
-  kube_version         = "v1.14.1"
+  kube_version         = "1.14.1"
+  allowed_ips          = "${local.allowed_ips}"
 }
 
 module "aws-cluster3" {
@@ -53,7 +56,8 @@ module "aws-cluster3" {
   number_workers_nodes = "1"
   service_cidr         = "100.98.0.0/16"
   pod_cidr             = "10.248.0.0/16"
-  kube_version         = "v1.14.1"
+  kube_version         = "1.14.1"
+  allowed_ips          = "${local.allowed_ips}"
 }
 
 module "submariner_gateway_cluster2" {

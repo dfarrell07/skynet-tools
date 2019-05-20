@@ -13,6 +13,15 @@ locals {
 }
 ```
 
+- Get your ***external/public*** IP [here](https://www.whatismyip.com/) and modify the ***allowed_ips*** list.
+  Each single ip must end with ***/32*** mask. This list can contain multiple addresses with correct subnet mask.
+
+```hcl
+locals {
+  allowed_ips = ["1.2.3.4/32"]
+}
+```
+
 - [Create](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_credentials_access-keys.html#Using_CreateAccessKey)
   and [configure](https://docs.aws.amazon.com/sdk-for-java/v1/developer-guide/setup-credentials.html) AWS credentials.
 

@@ -1,11 +1,15 @@
 # Create new environment VPC
+
+locals {
+  vpc_tag_keys   = ["kubernetes.io/cluster/${var.base_name}", "Name"]
+  vpc_tag_values = ["owned", "${var.base_name}-vpc"]
+}
+
 resource "aws_vpc" "env_vpc" {
   cidr_block           = "${var.env_vpc_index}.0.0/16"
   enable_dns_hostnames = true
 
-  tags {
-    Name = "${var.base_name}-vpc"
-  }
+  tags = "${zipmap(local.vpc_tag_keys, local.vpc_tag_values)}"
 }
 
 # Create internet gateway

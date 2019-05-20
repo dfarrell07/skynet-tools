@@ -3,8 +3,16 @@ data "template_file" "ecs_user_data" {
 }
 
 locals {
-  ec2_tag_keys         = ["kubernetes.io/cluster/${var.base_name}", "Name", "Submariner"]
-  subnet_tag_keys      = ["kubernetes.io/cluster/${var.base_name}", "Name"]
+  ec2_tag_keys = ["kubernetes.io/cluster/${var.base_name}", "Name", "Submariner"]
+
+  subnet_tag_keys = [
+    "kubernetes.io/cluster/${var.base_name}",
+    "kubernetes.io/role/alb-ingress",
+    "kubernetes.io/role/internal-elb",
+    "kubernetes.io/role/elb",
+    "Name",
+  ]
+
   sg_tag_keys          = ["kubernetes.io/cluster/${var.base_name}", "Name"]
   volume_tag_keys      = ["kubernetes.io/cluster/${var.base_name}"]
   volume_tag_values    = ["owned"]
@@ -12,7 +20,7 @@ locals {
   master_sg_tag_values = ["owned", "${var.base_name}-master-sg"]
   node_tag_values      = ["owned", "${var.base_name}-node", "GatewayNode"]
   master_tag_values    = ["owned", "${var.base_name}-master", "Broker"]
-  subnet_tag_values    = ["owned", "${var.base_name}-subnet"]
+  subnet_tag_values    = ["owned", "1", "1", "1", "${var.base_name}-subnet"]
 }
 
 resource "aws_security_group" "master_sg" {
@@ -45,10 +53,7 @@ resource "aws_security_group" "master_sg" {
     to_port   = 0
     protocol  = "-1"
 
-    # IL RedHat office
-    cidr_blocks = [
-      "82.81.161.50/32",
-    ]
+    cidr_blocks = ["${var.allowed_ips}"]
   }
 
   ingress = {
@@ -92,10 +97,7 @@ resource "aws_security_group" "node_sg" {
     to_port   = 0
     protocol  = "-1"
 
-    # IL RedHat office
-    cidr_blocks = [
-      "82.81.161.50/32",
-    ]
+    cidr_blocks = ["${var.allowed_ips}"]
   }
 
   ingress = {

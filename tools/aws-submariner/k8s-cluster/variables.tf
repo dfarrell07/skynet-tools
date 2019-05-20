@@ -49,3 +49,8 @@ variable "master_bind_port" {
   description = "API service external port"
   default     = 6443
 }
+
+variable "allowed_ips" {
+  type = "list"
+  description = "List of ips that are allowed all traffic."
+}

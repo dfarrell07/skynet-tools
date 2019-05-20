@@ -69,6 +69,7 @@
     name: "{{ packages }}"
   vars:
     packages:
+      - yum-versionlock
       - curl
       - net-tools
       - bind-utils
@@ -104,9 +105,12 @@
     name: "{{ packages }}"
   vars:
     packages:
-      - kubelet
-      - kubeadm
-      - kubectl
+      - kubelet-{{ kube_version }}
+      - kubeadm-{{ kube_version }}
+      - kubectl-{{ kube_version }}
+
+- name: Lock kubernetes packages version to {{ kube_version }}.
+  command: yum versionlock add kubectl kubelet kubeadm
 
 - name: Enable docker service
   systemd:
