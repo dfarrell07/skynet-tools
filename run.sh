@@ -116,6 +116,12 @@ Options:
                    4.00 using openshift-installer (only supports AWS now)
                    3.11 using openshift-ansible   (only supports RDO cloud now)
 
+  -P, --pod-cidr <cidr> (default is 10.128.0.0/14)
+                   This is the desired Pod CIDR for the cluster
+
+  -X, --service-cidr <cidr> (default is 172.30.0.0/16, avoid 172.17.0.0/16 docker0 range)
+                   This is the desidred Service CIDR for the cluster
+
 EOF
 
    common_options
@@ -210,6 +216,8 @@ OPT_NAME=
 OPT_VERSION=4
 OPT_MANAGER_HOST="localhost"
 OPT_SSH_KEY=$(cat $DIR/ansible/inventory/.ssh_key_name 2>/dev/null)
+OPT_POD_CIDR=10.128.0.0/14
+OPT_SERVICE_CIDR=172.30.0.0/16
 
 while [ "x$1" != "x" ]; do
     case "$1" in
@@ -274,6 +282,16 @@ while [ "x$1" != "x" ]; do
             shift
             ;;
 
+        --pod-cidr|-P)
+            OPT_POD_CIDR=$2
+            shift
+            ;;
+
+        --service-cidr|-X)
+            OPT_SERVICE_CIDR=$2
+            shift
+            ;;
+
         *) echo "ERROR: unknown option: $1" >&2
             usage >&2
             exit 2
@@ -324,6 +342,8 @@ deploy_openshift_cluster() {
 
     if [ "$OPT_VERSION" == "4.00" ]; then
 
+        #TODO: add OPT_POD_CIDR and OPT_SERVICE_CIDR support
+
         ansible-playbook $ANSIBLE_VERBOSITY \
                          ${OPT_ENVIRONMENT[@]} \
                          ${OPT_VARS[@]} \
@@ -348,6 +368,8 @@ deploy_openshift_cluster() {
                          -e manager_host=$OPT_MANAGER_HOST \
                          -e ssh_key_name=$OPT_SSH_KEY \
                          -e cluster_name=$OPT_NAME \
+                         -e pod_cidr=$OPT_POD_CIDR \
+                         -e service_cidr=$OPT_SERVICE_CIDR \
                          -i $DIR/ansible/inventory \
                          $DIR/ansible/os-cluster-3.yml \
                          -t create-os-cluster \
