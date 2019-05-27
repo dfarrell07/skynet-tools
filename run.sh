@@ -48,7 +48,7 @@ Common options:
                    additional variables for the ansible scripts
    -k, --ssh-key-name
                    the ssh key name you want to use for deployment
-                   on the cloud, will get saved to ansible/inventory/.ssh_key_name 
+                   on the cloud, will get saved to ansible/inventory/.ssh_key_name
                    for next runs
    -h              help for the specific deployment type/action
    -n, --name      unique name of the deployment
