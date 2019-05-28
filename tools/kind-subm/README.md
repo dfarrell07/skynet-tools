@@ -23,9 +23,8 @@ The script will install:
   
   Cluster{2..3}: One master node and two worker nodes.
   
-  Te configuration can be changed in ***cluster{1..3}-config.yaml***.
+  The configuration can be changed in ***cluster{1..3}-config.yaml***.
   
-  Each node will reside in a docker container.
 - Helm on all clusters.
 - Submariner broker on cluster1 and gateways on clusters{2..3} nodes.
 - netshoot pod for testing on cluster2 and nginx deployment on cluster3.
