@@ -17,7 +17,7 @@ chmod a+x e2e.sh
 
 The script will install:
 
-- Three k8s clusters. Please see the cluster{1..3}-config.yaml for network configurations.
+- Three k8s clusters. Please see the ***cluster{1..3}-config.yaml*** for network configurations.
   
   Cluster1: One master node for broker.
   
