@@ -18,9 +18,13 @@ chmod a+x e2e.sh
 The script will install:
 
 - Three k8s clusters. Please see the cluster{1..3}-config.yaml for network configurations.
+  
   Cluster1: One master node for broker.
+  
   Cluster{2..3}: One master node and two worker nodes.
+  
   Te configuration can be changed in ***cluster{1..3}-config.yaml***.
+  
   Each node will reside in a docker container.
 - Helm on all clusters.
 - Submariner broker on cluster1 and gateways on clusters{2..3} nodes.
@@ -58,7 +62,9 @@ kubectl exec -it netshoot -- curl -I $nginx_svc_ip_cluster3
 ```
 
 Please note that currently only pods to pods or pods to services connectivity is working.
+
 If you pass in ***e2e.sh*** cluster's (podSubnet) pods CIDR as serviceCIDR to submariner helm config, pods to pods connectivity will work.
+
 If you pass in ***e2e.sh*** cluster's (serviceSubnet) service CIDR as serviceCIDR to submariner helm config, pods to service connectivity will work.
 
 
