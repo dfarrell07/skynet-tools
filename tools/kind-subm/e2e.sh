@@ -23,35 +23,35 @@ function install_helm() {
     done
 }
 
-function setup_gateway_nodes() {
-    for i in {1..3}; do
-        kubectl config use-context cluster$i
-        if [ $i -eq 1 ]; then
-            helm install submariner-latest/submariner-k8s-broker \
-                --name ${SUBMARINER_BROKER_NS} \
-                --namespace ${SUBMARINER_BROKER_NS}
+function setup_broker() {
+    kubectl config use-context cluster1
+    helm install submariner-latest/submariner-k8s-broker \
+         --name ${SUBMARINER_BROKER_NS} \
+         --namespace ${SUBMARINER_BROKER_NS}
 
-            SUBMARINER_BROKER_URL=$(kubectl -n default get endpoints kubernetes -o jsonpath="{.subsets[0].addresses[0].ip}:{.subsets[0].ports[?(@.name=='https')].port}")
-            SUBMARINER_BROKER_CA=$(kubectl -n ${SUBMARINER_BROKER_NS} get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='${SUBMARINER_BROKER_NS}-client')].data['ca\.crt']}")
-            SUBMARINER_BROKER_TOKEN=$(kubectl -n ${SUBMARINER_BROKER_NS} get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='${SUBMARINER_BROKER_NS}-client')].data.token}"|base64 --decode)
-        fi
-        if [ $i -eq 2 ]; then
-            worker_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' cluster2-worker | head -n 1)
-            kubectl label node cluster$i-worker "submariner.io/gateway=true" --overwrite
-            helm install submariner-latest/submariner \
-                --name submariner \
-                --namespace submariner \
-                --set ipsec.psk="${SUBMARINER_PSK}" \
-                --set broker.server="${SUBMARINER_BROKER_URL}" \
-                --set broker.token="${SUBMARINER_BROKER_TOKEN}" \
-                --set broker.namespace="${SUBMARINER_BROKER_NS}" \
-                --set broker.ca="${SUBMARINER_BROKER_CA}" \
-                --set submariner.clusterId="cluster$i" \
-                --set submariner.clusterCidr="$worker_ip/32" \
-                --set submariner.serviceCidr="100.95.0.0/16" \
-                --set submariner.natEnabled="false"
-            echo Installing netshoot container on cluster$i worker: $worker_ip
-            cat <<EOF | kubectl apply -f -
+    SUBMARINER_BROKER_URL=$(kubectl -n default get endpoints kubernetes -o jsonpath="{.subsets[0].addresses[0].ip}:{.subsets[0].ports[?(@.name=='https')].port}")
+    SUBMARINER_BROKER_CA=$(kubectl -n ${SUBMARINER_BROKER_NS} get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='${SUBMARINER_BROKER_NS}-client')].data['ca\.crt']}")
+    SUBMARINER_BROKER_TOKEN=$(kubectl -n ${SUBMARINER_BROKER_NS} get secrets -o jsonpath="{.items[?(@.metadata.annotations['kubernetes\.io/service-account\.name']=='${SUBMARINER_BROKER_NS}-client')].data.token}"|base64 --decode)
+}
+
+function setup_cluster2_gateway() {
+    kubectl config use-context cluster2
+    worker_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' cluster2-worker | head -n 1)
+    kubectl label node cluster2-worker "submariner.io/gateway=true" --overwrite
+    helm install submariner-latest/submariner \
+         --name submariner \
+         --namespace submariner \
+         --set ipsec.psk="${SUBMARINER_PSK}" \
+         --set broker.server="${SUBMARINER_BROKER_URL}" \
+         --set broker.token="${SUBMARINER_BROKER_TOKEN}" \
+         --set broker.namespace="${SUBMARINER_BROKER_NS}" \
+         --set broker.ca="${SUBMARINER_BROKER_CA}" \
+         --set submariner.clusterId="cluster2" \
+         --set submariner.clusterCidr="$worker_ip/32" \
+         --set submariner.serviceCidr="100.95.0.0/16" \
+         --set submariner.natEnabled="false"
+    echo Installing netshoot container on cluster2 worker: $worker_ip
+    cat <<EOF | kubectl apply -f -
 apiVersion: v1
 kind: Pod
 metadata:
@@ -67,23 +67,26 @@ spec:
         - "3600"
   restartPolicy: Always
 EOF
-    else
-        worker_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' cluster$i-worker | head -n 1)
-        kubectl label node cluster$i-worker "submariner.io/gateway=true" --overwrite
-        helm install submariner-latest/submariner \
-                --name submariner \
-                --namespace submariner \
-                --set ipsec.psk="${SUBMARINER_PSK}" \
-                --set broker.server="${SUBMARINER_BROKER_URL}" \
-                --set broker.token="${SUBMARINER_BROKER_TOKEN}" \
-                --set broker.namespace="${SUBMARINER_BROKER_NS}" \
-                --set broker.ca="${SUBMARINER_BROKER_CA}" \
-                --set submariner.clusterId="cluster$i" \
-                --set submariner.clusterCidr="$worker_ip/32" \
-                --set submariner.serviceCidr="100.96.0.0/16" \
-                --set submariner.natEnabled="false"
-        echo Installing nginx container on cluster$i worker: $worker_ip
-        cat <<EOF | kubectl apply -f -
+}
+
+function setup_cluster3_gateway() {
+    kubectl config use-context cluster3
+    worker_ip=$(docker inspect -f '{{range .NetworkSettings.Networks}}{{.IPAddress}}{{end}}' cluster3-worker | head -n 1)
+    kubectl label node cluster3-worker "submariner.io/gateway=true" --overwrite
+    helm install submariner-latest/submariner \
+         --name submariner \
+         --namespace submariner \
+         --set ipsec.psk="${SUBMARINER_PSK}" \
+         --set broker.server="${SUBMARINER_BROKER_URL}" \
+         --set broker.token="${SUBMARINER_BROKER_TOKEN}" \
+         --set broker.namespace="${SUBMARINER_BROKER_NS}" \
+         --set broker.ca="${SUBMARINER_BROKER_CA}" \
+         --set submariner.clusterId="cluster3" \
+         --set submariner.clusterCidr="$worker_ip/32" \
+         --set submariner.serviceCidr="100.96.0.0/16" \
+         --set submariner.natEnabled="false"
+    echo Installing nginx container on cluster3 worker: $worker_ip
+    cat <<EOF | kubectl apply -f -
 apiVersion: apps/v1
 kind: Deployment
 metadata:
@@ -119,8 +122,6 @@ spec:
   selector:
     app: nginx-demo
 EOF
-    fi
-    done
 }
 
 helm repo add submariner-latest https://releases.rancher.com/submariner-charts/latest
@@ -128,4 +129,6 @@ helm repo update
 
 kind_clusters
 install_helm
-setup_gateway_nodes
+setup_broker
+setup_cluster2_gateway
+setup_cluster3_gateway
