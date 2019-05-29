@@ -10,7 +10,7 @@ function kind_clusters() {
         sed -i -- "s/name: kubernetes-admin.*/name: cluster$i/g" $(kind get kubeconfig-path --name="cluster$i")
     done
 
-    export KUBECONFIG=$HOME/.kube/kind-config-cluster1:$HOME/.kube/kind-config-cluster2:$HOME/.kube/kind-config-cluster3
+    export KUBECONFIG=$(kind get kubeconfig-path --name=cluster1):$(kind get kubeconfig-path --name=cluster2):$(kind get kubeconfig-path --name=cluster3)
 }
 
 function install_helm() {
