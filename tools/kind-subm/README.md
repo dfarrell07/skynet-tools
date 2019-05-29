@@ -18,13 +18,9 @@ chmod a+x e2e.sh
 The script will install:
 
 - Three k8s clusters. Please see the ***cluster{1..3}-config.yaml*** for network configurations.
-  
-  Cluster1: One master node for broker.
-  
-  Cluster{2..3}: One master node and two worker nodes.
-  
-  The configuration can be changed in ***cluster{1..3}-config.yaml***.
-  
+  - Cluster1: One master node for broker.
+  - Cluster{2..3}: One master node and two worker nodes.
+  - The configuration can be changed in ***cluster{1..3}-config.yaml***.
 - Helm on all clusters.
 - Submariner broker on cluster1 and gateways on clusters{2..3} nodes.
 - netshoot pod for testing on cluster2 and nginx deployment on cluster3.
@@ -42,7 +38,6 @@ kubectl config get-contexts
 ```
 
 You should see all three contexts for clusters{1..3} available.
-
 
 ### Testing
 
@@ -65,7 +60,6 @@ Please note that currently only pods to pods or pods to services connectivity is
 If you pass in ***e2e.sh*** cluster's (podSubnet) pods CIDR as serviceCIDR to submariner helm config, pods to pods connectivity will work.
 
 If you pass in ***e2e.sh*** cluster's (serviceSubnet) service CIDR as serviceCIDR to submariner helm config, pods to service connectivity will work.
-
 
 ### Cleanup
 
