@@ -30,7 +30,7 @@ The script will install:
 ### Export kind kube config locations.
 
 ```bash
-export KUBECONFIG=$HOME/.kube/kind-config-cluster1:$HOME/.kube/kind-config-cluster2:$HOME/.kube/kind-config-cluster3
+export KUBECONFIG=$(kind get kubeconfig-path --name=cluster1):$(kind get kubeconfig-path --name=cluster2):$(kind get kubeconfig-path --name=cluster3)
 ```
 
 Test with:
