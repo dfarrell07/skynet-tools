@@ -68,8 +68,3 @@ If you pass in ***e2e.sh*** cluster's (serviceSubnet) service CIDR as serviceCID
 ```bash
 for i in {1..3}; do kind delete cluster --name=cluster$i; done
 ```
-
-### Issues
-
-- device-mapper: table: 253:7: thin: Couldn't open thin internal device
-  The issue is related to SELinux 
