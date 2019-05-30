@@ -7,6 +7,8 @@
 - [kubectl](https://kubernetes.io/docs/tasks/tools/install-kubectl/)
 - [helm](https://helm.sh/docs/using_helm/#installing-helm)
 - [docker](https://docs.docker.com/install/)
+- [Change SELinux to permissive](https://www.ibm.com/support/knowledgecenter/en/POWER8/p8ef9/p8ef9_selinux_setup.htm)
+- [Add local user to docker group](https://docs.docker.com/install/linux/linux-postinstall/)
 
 ### Run the script
 
@@ -66,3 +68,8 @@ If you pass in ***e2e.sh*** cluster's (serviceSubnet) service CIDR as serviceCID
 ```bash
 for i in {1..3}; do kind delete cluster --name=cluster$i; done
 ```
+
+### Issues
+
+- device-mapper: table: 253:7: thin: Couldn't open thin internal device
+  The issue is related to SELinux 
