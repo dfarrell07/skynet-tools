@@ -48,6 +48,7 @@ Get nginx service clusterIP from cluster3:
 ```bash
 kubectl config use-context cluster3
 kubectl get svc -l app=nginx-demo
+nginx_svc_ip_cluster3=$(kubectl get svc -l app=nginx-demo | awk 'FNR == 2 {print $3}')
 ```
 
 Switch context to cluster2 and curl from pod to a service on cluster3:
@@ -67,4 +68,5 @@ If you pass in ***e2e.sh*** cluster's (serviceSubnet) service CIDR as serviceCID
 
 ```bash
 for i in {1..3}; do kind delete cluster --name=cluster$i; done
+unset KUBECONFIG
 ```
