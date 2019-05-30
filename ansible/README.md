@@ -63,23 +63,13 @@ TODO: Doc overriding default os-cluster vars to configure clusters
 Create:
 
 ```
-ansible-playbook rdo-vm.yml -i hosts --tags create-rdo-vm -c local
+ansible-playbook toolbox-vm.yml -i hosts --tags create-rdo-vms -e manager_host=localhost
 ```
 
 Delete:
 
 ```
-ansible-playbook rdo-vm.yml -i hosts --tags delete-rdo-vm -c local
-```
-
-The `-c local` options above assume you're using localhost as `rdo-vm-manager`
-host.
-
-Hosts file should include:
-
-```
-[rdo-vm]
-rdo-vm-manager ansible_host=localhost
+ansible-playbook toolbox-vm.yml -i hosts --tags delete-rdo-vms -e manager_host=localhost
 ```
 
 # Toolbox on RDO Cloud VM

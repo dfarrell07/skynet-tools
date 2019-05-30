@@ -5,42 +5,28 @@
     state: latest
   become: yes
 
-# NB: Update this as new Go versions are released
-#- name: Install Go
-#  unarchive:
-#    src: https://dl.google.com/go/go1.11.5.linux-amd64.tar.gz
-#    remote_src: yes
-#    dest: /usr/local/
-#  become: yes
 
-#- name: Add Go to path
-#  lineinfile:
-#    path: ~/.bash_profile
-#    line: 'export PATH=$PATH:/usr/local/go/bin'
-
-#- name: Symlink Go to /usr/bin for SSH shells
-#  file:
-#    src: /usr/local/go/bin/go
-#    dest: /usr/bin/go
-#    state: link
-#  become: yes
-
-- name: Install Git
-  yum:
-    name: git
+- name: Install Go
+  unarchive:
+    src: https://dl.google.com/go/go1.12.5.linux-amd64.tar.gz
+    remote_src: yes
+    dest: /usr/local/
   become: yes
 
-- name: Install vim
-  yum:
-    name: vim
+- name: Add Go to path
+  lineinfile:
+    path: ~/.bash_profile
+    line: 'export PATH=$PATH:/usr/local/go/bin'
+
+- name: Symlink Go to /usr/bin for SSH shells
+  file:
+    src: /usr/local/go/bin/go
+    dest: /usr/bin/go
+    state: link
   become: yes
 
-- name: Install tree
+- name: Install Packages
   yum:
-    name: tree
+    name: [git, vim, tree, tmux]
   become: yes
 
-- name: Install tmux
-  yum:
-    name: tmux
-  become: yes

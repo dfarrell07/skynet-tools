@@ -1,0 +1,17 @@
+---
+- name: Prepare the host itself
+  hosts: "{{ manager_host | default('localhost') }}"
+  roles:
+    - role: rdo-networks
+    - role: rdo-vms
+  vars:
+    vms:
+      toolbox:
+        name: "toolbox"
+        flavor: 'm1.medium'
+        net: 'private_k8s_net'
+        groups: ['toolbox']
+        security_groups: ['ssh_icmp']
+    create_inventory:
+      template: toolbox-inventory.j2
+      dest: "inventory/toolbox-inventory"

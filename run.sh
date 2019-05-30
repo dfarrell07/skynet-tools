@@ -333,7 +333,49 @@ verify_cluster_name() {
 ######################################################
 #   Functions for the different deployment actions   #
 ######################################################
+deploy_toolbox() {
+    verify_ssh_key
 
+    ansible-playbook $ANSIBLE_VERBOSITY \
+                         ${OPT_ENVIRONMENT[@]} \
+                         ${OPT_VARS[@]} \
+                         -e manager_host=$OPT_MANAGER_HOST \
+                         -e ssh_key_name=$OPT_SSH_KEY \
+                         ${OPT_SKIP_TAGS[@]} \
+                         $DIR/ansible/toolbox-vm.yml \
+                         -i $DIR/ansible/inventory \
+                         -t create-rdo-vms \
+                         -t create-rdo-networks \
+                         ${OPT_SKIP_TAGS[@]}
+
+    ansible-playbook $ANSIBLE_VERBOSITY \
+                         ${OPT_ENVIRONMENT[@]} \
+                         ${OPT_VARS[@]} \
+                         -e manager_host=$OPT_MANAGER_HOST \
+                         -e ssh_key_name=$OPT_SSH_KEY \
+                         ${OPT_SKIP_TAGS[@]} \
+                         $DIR/ansible/toolbox.yml \
+                         -i $DIR/ansible/inventory \
+                         -t toolbox \
+                         ${OPT_SKIP_TAGS[@]}
+
+}
+
+destroy_toolbox() {
+    verify_destroy toolbox
+
+    ansible-playbook $ANSIBLE_VERBOSITY \
+                         ${OPT_ENVIRONMENT[@]} \
+                         ${OPT_VARS[@]} \
+                         -e manager_host=$OPT_MANAGER_HOST \
+                         -e ssh_key_name=$OPT_SSH_KEY \
+                         ${OPT_SKIP_TAGS[@]} \
+                         $DIR/ansible/toolbox-vm.yml \
+                         -i $DIR/ansible/inventory \
+                         -t delete-rdo-vms \
+                         ${OPT_SKIP_TAGS[@]}
+
+}
 
 deploy_openshift_cluster() {
 
