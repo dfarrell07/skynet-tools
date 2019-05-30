@@ -3,4 +3,3 @@
   remote_user: centos
   roles:
     - role: toolbox
-

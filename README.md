@@ -30,6 +30,8 @@ Deployment types:
   toolbox           Used to manage a development/deployment toolbox with the team
                     development tools, plus openshift-installer, plus ansible.
 
+  toolbox-kind      Used to deploy 3 kind clusters + submariners in the toolbox VM
+
   openshift-cluster Used to manage a single cluster
 
   rdo-networks      Used to cleanup or create default working RDO networks and
@@ -90,6 +92,29 @@ $ vim ansible/clouds.yml
 
 ```bash
 ./run.sh deploy openshift-cluster -v 4.00 -n c1 --pod-cidr 10.132.0.0/14 --service-cidr 172.31.0.0/16
+```
+
+## Deploying your toolbox
+
+You can deploy a toolbox using the following command:
+
+```bash
+./run.sh deploy toolbox
+```
+
+And setup 3 kubernetes-in-docker clusters + submariner with:
+
+```bash
+./run.sh deploy toolbox-kind
+```
+
+At that point if you ssh centos@toolbox-ip, you can use the credentials like:
+
+```bash
+export KUBECONFIG=/home/centos/.kube/kind-config-cluster1:/home/centos/.kube/kind-config-cluster2:/home/centos/.kube/kind-config-cluster3
+kubectl config get-contexts
+kubectl config use-context cluster3
+kubectl get Nodes -o wide
 ```
 
 # ./run.sh help

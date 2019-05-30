@@ -19,13 +19,15 @@ usage () {
 
 Usage: $0 <action> ...
 
-  $0 deploy  <deployment-type>  ...  Deploy on the specified cloud.
+  $0 deploy   <deployment-type> ...  Deploy on the specified cloud.
   $0 destroy  <deployment-type> ...  Destroy the specified deployment
   $0 ping                            Ping all instances on inventory
 
 Deployment types:
   toolbox           Used to manage a development/deployment toolbox with the team
                     development tools, plus openshift-installer, plus ansible.
+
+  toolbox-kind      Used to deploy 3 kind clusters + submariners in the toolbox VM
 
   openshift-cluster Used to manage a single cluster
 
@@ -165,6 +167,8 @@ check_deployment_type() {
     toolbox)           OPT_CLOUD=RDO
                         ;;
     rdo-networks)      OPT_CLOUD=RDO
+                        ;;
+    toolbox-kind)   OPT_CLOUD=RDO
                         ;;
     *) echo "ERROR: deployment type $DEPLOYMENT_TYPE unknown" >&2
                 usage >&2
@@ -333,6 +337,37 @@ verify_cluster_name() {
 ######################################################
 #   Functions for the different deployment actions   #
 ######################################################
+deploy_toolbox_kind() {
+    ansible-playbook $ANSIBLE_VERBOSITY \
+                         ${OPT_ENVIRONMENT[@]} \
+                         ${OPT_VARS[@]} \
+                         -e manager_host=$OPT_MANAGER_HOST \
+                         -e ssh_key_name=$OPT_SSH_KEY \
+                         -e kindsubm_host=toolbox \
+                         ${OPT_SKIP_TAGS[@]} \
+                         $DIR/ansible/kindsubm.yml \
+                         -i $DIR/ansible/inventory \
+                         -t kindsubm-deploy \
+                         ${OPT_SKIP_TAGS[@]} \
+                         --start-at-task="replace localhost in config file, with remote IP"
+}
+
+destroy_toolbox_kind() {
+    ansible-playbook $ANSIBLE_VERBOSITY \
+                         ${OPT_ENVIRONMENT[@]} \
+                         ${OPT_VARS[@]} \
+                         -e manager_host=$OPT_MANAGER_HOST \
+                         -e ssh_key_name=$OPT_SSH_KEY \
+                         -e kindsubm_host=toolbox \
+                         ${OPT_SKIP_TAGS[@]} \
+                         $DIR/ansible/kindsubm.yml \
+                         -i $DIR/ansible/inventory \
+                         -t kindsubm-destroy \
+                         ${OPT_SKIP_TAGS[@]}
+}
+
+
+
 deploy_toolbox() {
     verify_ssh_key
 

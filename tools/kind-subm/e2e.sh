@@ -124,6 +124,7 @@ spec:
 EOF
 }
 
+helm init
 helm repo add submariner-latest https://releases.rancher.com/submariner-charts/latest
 helm repo update
 

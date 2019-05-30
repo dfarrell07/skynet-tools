@@ -1,0 +1,27 @@
+---
+- name: Install docker
+  yum: name=docker state=present
+  become: yes
+
+- name: Enable docker service
+  service: name=docker state=started enabled=yes
+  become: yes
+
+- name: Install Kind
+  get_url:
+    url: https://github.com/kubernetes-sigs/kind/releases/download/v0.3.0/kind-linux-amd64
+    mode: 0777
+    dest: /usr/local/bin/kind
+  become: yes
+
+- name: Install kubectl
+  shell: |
+    cd /usr/local/bin
+    curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+    chmod a+x kubectl
+  become: yes
+
+- name: Install helm
+  shell: |
+    curl -L https://git.io/get_helm.sh | bash || exit 0
+  become: yes

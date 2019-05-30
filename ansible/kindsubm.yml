@@ -1,0 +1,68 @@
+---
+- hosts: "{{ kindsubm_host }}"
+  remote_user: centos
+  roles:
+    - role: kindsubm-prereqs
+  tasks:
+    - block:
+      - name: Install scripts
+        synchronize:
+          src: ../tools/kind-subm
+          dest: /root
+        become: true
+
+      - name: Run the kind e2e script (find the progress logs at /root/kind-subm/kind-e2e-setup.log)
+        shell: >
+          set -x &&
+          set -o pipefail &&
+          export PATH=$PATH:/usr/local/bin/ &&
+          cd /root/kind-subm &&
+          bash ./e2e.sh >/root/kind-subm/kind-e2e-setup.log 2>&1
+        become: true
+
+      - name: Copy credentials to the centos acount
+        shell: |
+          cp -rfp /root/.kube /home/centos
+          chown centos:centos -R /home/centos/.kube
+          echo export KUBECONFIG=/home/centos/.kube/kind-config-cluster1:/home/centos/.kube/kind-config-cluster2:/home/centos/.kube/kind-config-cluster3 >> /home/centos/.bash_profile
+        become: true
+
+      - name: fetch kubeconfig files to local creds directory
+        fetch:
+          src: "/home/centos/.kube/kind-config-cluster{{ item }}"
+          dest:  "../creds/"
+          flat: yes
+        with_items:
+          - 1
+          - 2
+          - 3
+
+      - name: replace localhost in config file, with remote IP
+        local_action: replace path="../creds/kind-config-cluster{{ item }}" regexp='localhost' replace="{{ ansible_ssh_host }}"
+        with_items:
+          - 1
+          - 2
+          - 3
+
+      tags:
+        - kindsubm-deploy
+
+    - name: Delete kind clusters
+      shell: |
+        export PATH=$PATH:/usr/local/bin/
+        for i in {1..3}; do kind delete cluster --name=cluster$i; done
+        rm -f /root/.kube/kind-config-cluster{1..3}
+        rm -f /home/centos/.kube/kind-config-cluster{1..3}
+      become: true
+      tags:
+        - kindsubm-destroy
+
+    - name: replace localhost in config file, with remote IP
+      local_action: file path="../creds/kind-config-cluster{{ item }}" state=absent
+      with_items:
+        - 1
+        - 2
+        - 3
+      tags:
+        - kindsubm-destroy
+
