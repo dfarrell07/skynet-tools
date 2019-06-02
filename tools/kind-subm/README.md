@@ -55,7 +55,8 @@ Switch context to cluster2 and curl from pod to a service on cluster3:
 
 ```bash
 kubectl config use-context cluster2
-kubectl exec -it netshoot -- curl -I $nginx_svc_ip_cluster3
+netshoot_pod=$(kubectl get pods -l app=netshoot | awk 'FNR == 2 {print $1}')
+kubectl exec -it ${netshoot_pod} -- curl -I ${nginx_svc_ip_cluster3}
 ```
 
 Please note that currently only pods to pods or pods to services connectivity is working.
