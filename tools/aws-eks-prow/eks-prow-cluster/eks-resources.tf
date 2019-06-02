@@ -92,7 +92,6 @@ data "template_file" "worker_user_data_template" {
   }
 }
 
-
 resource "aws_launch_configuration" "workers-lc" {
   associate_public_ip_address = true
   iam_instance_profile        = "${aws_iam_instance_profile.worker-instance-profile.id}"
@@ -102,6 +101,7 @@ resource "aws_launch_configuration" "workers-lc" {
   security_groups             = ["${aws_security_group.cluster-worker-sg.id}"]
   user_data_base64            = "${base64encode(data.template_file.worker_user_data_template.rendered)}"
   key_name                    = "${var.key_name}"
+  enable_monitoring           = false
 
   root_block_device {
     volume_size           = 30
@@ -137,7 +137,6 @@ resource "aws_autoscaling_group" "workers-asg" {
   }
 }
 
-
 data "template_file" "aws_auth_configmap_template" {
   template = "${file("${path.module}/templates/aws-auth-configmap.tmpl")}"
 
@@ -167,7 +166,6 @@ resource "local_file" "alb_ingress_conroller" {
   content  = "${data.template_file.alb_ingress_conroller_template.rendered}"
   filename = "${path.module}/tmp/alb-ingress-controller.yaml"
 }
-
 
 resource "null_resource" "aws_auth_configmap" {
   provisioner "local-exec" {

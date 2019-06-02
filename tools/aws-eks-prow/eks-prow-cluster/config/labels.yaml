@@ -1,10 +1,3 @@
-# default: global configuration to be applied to all repos
-# repos: list of repos with specific configuration to be applied in addition to default
-#   labels: list of labels - keys for each item: color, description, name, target, deleteAfter, previously
-#     deleteAfter: 2006-01-02T15:04:05Z (rfc3339)
-#     previously: list of previous labels (color name deleteAfter, previously)
-#     target: one of issues, prs, or both (also TBD)
-#     addedBy: human? prow plugin? other?
 ---
 default:
   labels:
@@ -17,11 +10,6 @@ default:
     - color: 0052cc
       description: Issues or PRs related to Kubernetes licensing
       name: area/licensing
-      target: both
-      addedBy: label
-    - color: 0052cc
-      description: Issues or PRs related to dependency changes
-      name: area/dependency
       target: both
       addedBy: label
     - color: 0ffa16
@@ -130,12 +118,6 @@ default:
       target: prs
       prowPlugin: hold
       addedBy: anyone
-    - color: e11d21
-      description: Indicates that a PR should not merge because it has an invalid commit message.
-      name: do-not-merge/invalid-commit-message
-      target: prs
-      prowPlugin: invalidcommitmsg
-      addedBy: prow
     - color: e11d21
       description: Indicates that a PR should not merge because it has an invalid OWNERS file in it.
       name: do-not-merge/invalid-owners-file
@@ -284,7 +266,7 @@ default:
       target: prs
       prowPlugin: trigger
       addedBy: prow
-    - color: e11d21
+    - color: BDBDBD
       description: Indicates a PR cannot be merged because it has merge conflicts with HEAD.
       name: needs-rebase
       target: prs
@@ -389,6 +371,12 @@ default:
     - color: d2b48c
       description: Categorizes an issue or PR as relevant to sig-azure.
       name: sig/azure
+      target: both
+      prowPlugin: label
+      addedBy: anyone
+    - color: d2b48c
+      description: Categorizes an issue or PR as relevant to sig-big-data.
+      name: sig/big-data
       target: both
       prowPlugin: label
       addedBy: anyone
@@ -511,7 +499,7 @@ default:
       addedBy: anyone
     - color: d2b48c
       description: Categorizes an issue or PR as relevant to sig-testing.
-      name: sig/testing
+      name: sig/multicluster-networking
       target: both
       prowPlugin: label
       addedBy: anyone
@@ -593,14 +581,6 @@ default:
       target: both
       prowPlugin: label
       addedBy: anyone
-    - color: d2b48c
-      description: Categorizes an issue or PR as relevant to ug-big-data.
-      name: ug/big-data
-      target: both
-      prowPlugin: label
-      addedBy: anyone
-      previously:
-      - name: sig/big-data
     - color: ee9900
       description: Denotes a PR that changes 100-499 lines, ignoring generated files.
       name: size/L
@@ -639,31 +619,50 @@ default:
       addedBy: prow
     - color: ffaa00
       description: Denotes a PR that should be squashed by tide when it merges.
-      name: tide/merge-method-squash
+      name: tide/squash
       target: prs
       addedBy: humans
-      previously:
-        - name: tide/squash
-    - color: ffaa00
-      description: Denotes a PR that should be rebased by tide when it merges.
-      name: tide/merge-method-rebase
-      target: prs
-      addedBy: humans
-    - color: ffaa00
-      description: Denotes a PR that should use a standard merge by tide when it merges.
-      name: tide/merge-method-merge
-      target: prs
-      addedBy: humans
-    - color: e11d21
-      description: Denotes an issue that blocks the tide merge queue for a branch while it is open.
-      name: tide/merge-blocker
-      target: issues
-      addedBy: humans
-      previously:
-        - name: merge-blocker
     - color: f9d0c4
       description: ¯\\\_(ツ)_/¯
       name: "¯\\_(ツ)_/¯"
       target: both
       prowPlugin: shrug
       addedBy: humans
+repos:
+  mcn-org/test-repo:
+    labels:
+      - color: 0052cc
+        description: Issues or PRs related to kubernetes conformance tests
+        name: area/conformance
+        target: both
+        addedBy: label
+      - color: 0052cc
+        description: Issues or PRs related to the contributor guide
+        name: area/contributor-guide
+        target: both
+        addedBy: label
+      - color: 0052cc
+        description: Issues or PRs related to contributor summit events
+        name: area/contributor-summit
+        target: both
+        addedBy: label
+      - color: 0052cc
+        description: Issues or PRs related to deflaking kubernetes tests
+        name: area/deflake
+        target: both
+        addedBy: label
+      - color: 0052cc
+        description: Issues or PRs related to the developer guide
+        name: area/developer-guide
+        target: both
+        addedBy: label
+      - color: 0052cc
+        description: Issues or PRs related to the devstats subproject
+        name: area/devstats
+        target: both
+        addedBy: label
+      - color: 0052cc
+        description: Issues or PRs related to the release-team subproject
+        name: area/release-team
+        target: both
+        addedBy: label

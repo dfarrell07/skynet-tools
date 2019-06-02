@@ -2,32 +2,6 @@
 # components. Don't edit resources in this file. Instead, pull them out into
 # their own files.
 ---
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  namespace: default
-  name: plugins
-data:
-  plugins.yaml: ""
----
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  namespace: default
-  name: config
-data:
-  config.yaml: |
-    prowjob_namespace: default
-    pod_namespace: test-pods
-    periodics:
-    - interval: 10m
-      agent: kubernetes
-      name: echo-test
-      spec:
-        containers:
-        - image: alpine
-          command: ["/bin/date"]
----
 apiVersion: apiextensions.k8s.io/v1beta1
 kind: CustomResourceDefinition
 metadata:
@@ -139,11 +113,13 @@ spec:
       terminationGracePeriodSeconds: 180
       containers:
       - name: hook
-        image: gcr.io/k8s-prow/hook:v20190517-95ef25d87
+        image: gcr.io/k8s-prow/hook:v20190528-0d7c4b53a
         imagePullPolicy: Always
         args:
         - --dry-run=false
         - --config-path=/etc/config/config.yaml
+        - --github-endpoint=http://ghproxy
+        - --github-endpoint=https://api.github.com
         ports:
           - name: http
             containerPort: 8888
@@ -218,10 +194,12 @@ spec:
       serviceAccountName: "plank"
       containers:
       - name: plank
-        image: gcr.io/k8s-prow/plank:v20190517-95ef25d87
+        image: gcr.io/k8s-prow/plank:v20190528-0d7c4b53a
         args:
         - --dry-run=false
         - --config-path=/etc/config/config.yaml
+        - --github-endpoint=http://ghproxy
+        - --github-endpoint=https://api.github.com
         volumeMounts:
         - name: oauth
           mountPath: /etc/github
@@ -254,7 +232,7 @@ spec:
       serviceAccountName: "sinker"
       containers:
       - name: sinker
-        image: gcr.io/k8s-prow/sinker:v20190517-95ef25d87
+        image: gcr.io/k8s-prow/sinker:v20190528-0d7c4b53a
         args:
         - --config-path=/etc/config/config.yaml
         volumeMounts:
@@ -289,7 +267,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
       - name: deck
-        image: gcr.io/k8s-prow/deck:v20190517-95ef25d87
+        image: gcr.io/k8s-prow/deck:v20190528-0d7c4b53a
         args:
         - --config-path=/etc/config/config.yaml
         - --tide-url=http://tide/
@@ -354,7 +332,7 @@ spec:
       terminationGracePeriodSeconds: 30
       containers:
       - name: horologium
-        image: gcr.io/k8s-prow/horologium:v20190517-95ef25d87
+        image: gcr.io/k8s-prow/horologium:v20190528-0d7c4b53a
         args:
         - --config-path=/etc/config/config.yaml
         volumeMounts:
@@ -385,7 +363,7 @@ spec:
       serviceAccountName: "tide"
       containers:
       - name: tide
-        image: gcr.io/k8s-prow/tide:v20190517-95ef25d87
+        image: gcr.io/k8s-prow/tide:v20190528-0d7c4b53a
         args:
         - --dry-run=false
         - --config-path=/etc/config/config.yaml
@@ -461,7 +439,7 @@ spec:
       terminationGracePeriodSeconds: 180
       containers:
       - name: statusreconciler
-        image: gcr.io/k8s-prow/status-reconciler:v20190517-95ef25d87
+        image: gcr.io/k8s-prow/status-reconciler:v20190528-0d7c4b53a
         args:
         - --dry-run=false
         - --continue-on-error=true
@@ -817,3 +795,217 @@ roleRef:
 subjects:
 - kind: ServiceAccount
   name: "statusreconciler"
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  namespace: default
+  name: needs-rebase
+  labels:
+    app: needs-rebase
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: needs-rebase
+    spec:
+      terminationGracePeriodSeconds: 180
+      containers:
+      - name: needs-rebase
+        image: gcr.io/k8s-prow/needs-rebase:v20190528-0d7c4b53a
+        imagePullPolicy: Always
+        args:
+        - --dry-run=false
+        - --github-endpoint=http://ghproxy
+        - --github-endpoint=https://api.github.com
+        ports:
+          - name: http
+            containerPort: 8888
+        volumeMounts:
+        - name: hmac
+          mountPath: /etc/webhook
+          readOnly: true
+        - name: oauth
+          mountPath: /etc/github
+          readOnly: true
+        - name: plugins
+          mountPath: /etc/plugins
+          readOnly: true
+      volumes:
+      - name: hmac
+        secret:
+          secretName: hmac-token
+      - name: oauth
+        secret:
+          secretName: oauth-token
+      - name: plugins
+        configMap:
+          name: plugins
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: default
+  name: needs-rebase
+spec:
+  selector:
+    app: needs-rebase
+  ports:
+  - port: 80
+    targetPort: 8888
+  type: NodePort
+---
+kind: PersistentVolumeClaim
+apiVersion: v1
+metadata:
+  namespace: default
+  labels:
+    app: ghproxy
+  name: ghproxy
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 30Gi
+  # gce-ssd-retain is specified in prow/cluster/gce-ssd-retain_storageclass.yaml
+  #
+  # If you are setting up your own Prow instance you can do any of the following:
+  # 1) Delete this to use the default storage class for your cluster.
+  # 2) Specify your own storage class.
+  # 3) If you are using GKE you can use the gce-ssd-retain storage class. It can be
+  #    created with: `kubectl create -f prow/cluster/gce-ssd-retain_storageclass.yaml
+  # storageClassName: gce-ssd-retain
+---
+apiVersion: extensions/v1beta1
+kind: Deployment
+metadata:
+  namespace: default
+  name: ghproxy
+  labels:
+    app: ghproxy
+spec:
+  replicas: 1
+  template:
+    metadata:
+      labels:
+        app: ghproxy
+    spec:
+      containers:
+      - name: ghproxy
+        image: gcr.io/k8s-prow/ghproxy:v20190528-0d7c4b53a
+        args:
+        - --cache-dir=/cache
+        - --cache-sizeGB=29
+        ports:
+        - containerPort: 8888
+        volumeMounts:
+        - name: cache
+          mountPath: /cache
+      volumes:
+      - name: cache
+        persistentVolumeClaim:
+          claimName: ghproxy
+      # run on our dedicated node
+      tolerations:
+      - key: "dedicated"
+        operator: "Equal"
+        value: "ghproxy"
+        effect: "NoSchedule"
+      nodeSelector:
+        dedicated: "ghproxy"
+---
+apiVersion: v1
+kind: Service
+metadata:
+  namespace: default
+  labels:
+    app: ghproxy
+  name: ghproxy
+spec:
+  ports:
+  - port: 80
+    protocol: TCP
+    targetPort: 8888
+  selector:
+    app: ghproxy
+  type: NodePort
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  name: label-sync
+spec:
+  schedule: "17 * * * *"  # Every hour at 17 minutes past the hour
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    metadata:
+      labels:
+        app: label-sync
+    spec:
+      template:
+        spec:
+          containers:
+            - name: label-sync
+              image: gcr.io/k8s-prow/label_sync:v20190521-29b667418
+              args:
+              - --config=/etc/config/labels.yaml
+              - --confirm=true
+              - --orgs=mcn-org
+              - --token=/etc/github/oauth
+              volumeMounts:
+              - name: oauth
+                mountPath: /etc/github
+                readOnly: true
+              - name: config
+                mountPath: /etc/config
+                readOnly: true
+          restartPolicy: Never
+          volumes:
+          - name: oauth
+            secret:
+              secretName: oauth-token
+          - name: config
+            configMap:
+              name: label-config
+---
+apiVersion: batch/v1beta1
+kind: CronJob
+metadata:
+  namespace: default
+  name: branchprotector
+spec:
+  schedule: "54 * * * *"  # Every hour at 54 minutes past the hour
+  concurrencyPolicy: Forbid
+  jobTemplate:
+    metadata:
+      labels:
+        app: branchprotector
+    spec:
+      template:
+        spec:
+          containers:
+          - name: branchprotector
+            image: gcr.io/k8s-prow/branchprotector:v20190528-0d7c4b53a
+            args:
+            - --config-path=/etc/config/config.yaml
+            - --github-token-path=/etc/github/oauth
+            - --confirm
+            - --github-endpoint=http://ghproxy
+            - --github-endpoint=https://api.github.com
+            volumeMounts:
+            - name: oauth
+              mountPath: /etc/github
+              readOnly: true
+            - name: config
+              mountPath: /etc/config
+              readOnly: true
+          restartPolicy: Never
+          volumes:
+          - name: oauth
+            secret:
+              secretName: oauth-token
+          - name: config
+            configMap:
+              name: config

@@ -1,0 +1,34 @@
+postsubmits:
+  mcn-org/test-repo:
+  - name: test-postsubmit
+    decorate: true
+    branches:
+    - ^master$
+    spec:
+      containers:
+      - image: alpine
+        command: ["/bin/printenv"]
+presubmits:
+  mcn-org/test-repo:
+  - name: ci-mcn-go-build
+    decorate: true
+    always_run: true
+    skip_report: false
+    context: ci-mcn-go-build
+    spec:
+      containers:
+      - image: alpine
+        command: ["/bin/printenv"]
+    trigger: "/test build" # Regexp, see discussion.
+    rerun_command: "/test build"  # String, see discussion.
+  - name: ci-mcn-golanglint-ci
+    decorate: true
+    always_run: true
+    skip_report: false
+    context: ci-mcn-golanglint-ci
+    spec:
+      containers:
+      - image: alpine
+        command: ["/bin/printenv"]
+    trigger: "/test lint" # Regexp, see discussion.
+    rerun_command: "/test lint"  # String, see discussion.

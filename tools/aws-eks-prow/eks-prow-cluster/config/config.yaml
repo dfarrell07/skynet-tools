@@ -1,22 +1,22 @@
 plank:
   allow_cancellations: true # whether to delete ProwJobs' pod (true) or not (false) when new instances are triggered for the same PR
   # used to link to job results for decorated jobs (with pod utilities)
-  job_url_prefix: 'http://mcn.ci.netwiz.org/view/gcs'
+  job_url_prefix: 'http://change_me_dns/view/gcs'
   # used to link to job results for non decorated jobs (without pod utilities)
-  job_url_template: 'http://mcn.ci.netwiz.org/view/gcs/mcn-prow-artifacts/pr-logs/pull/{{.Spec.Refs.Repo}}/{{with index .Spec.Refs.Pulls 0}}{{.Number}}{{end}}/{{.Spec.Job}}/{{.Status.BuildID}}'
-  report_template: '[Full PR test history](http://mcn.ci.netwiz.org/pr-history?org={{.Spec.Refs.Org}}&repo={{.Spec.Refs.Repo}}&pr={{with index .Spec.Refs.Pulls 0}}{{.Number}}{{end}})'
+  job_url_template: 'http://change_me_dns/view/gcs/change_me_bucket/pr-logs/pull/{{.Spec.Refs.Repo}}/{{with index .Spec.Refs.Pulls 0}}{{.Number}}{{end}}/{{.Spec.Job}}/{{.Status.BuildID}}'
+  report_template: '[Full PR test history](http://change_me_dns/pr-history?org={{.Spec.Refs.Org}}&repo={{.Spec.Refs.Repo}}&pr={{with index .Spec.Refs.Pulls 0}}{{.Number}}{{end}})'
   default_decoration_config:
     timeout: 14400000000000 # 4h in nano seconds
     grace_period: 15000000000 # 15s in nano seconds
     utility_images: # pull specs for container images used to construct job pods
-      clonerefs: gcr.io/k8s-prow/clonerefs:v20190221-d14461a
-      initupload: gcr.io/k8s-prow/initupload:v20190221-d14461a
-      entrypoint: gcr.io/k8s-prow/entrypoint:v20190221-d14461a
-      sidecar: gcr.io/k8s-prow/sidecar:v20190221-d14461a
+      clonerefs: "gcr.io/k8s-prow/clonerefs:v20190528-0d7c4b53a"
+      initupload: "gcr.io/k8s-prow/initupload:v20190528-0d7c4b53a"
+      entrypoint: "gcr.io/k8s-prow/entrypoint:v20190528-0d7c4b53a"
+      sidecar: "gcr.io/k8s-prow/sidecar:v20190528-0d7c4b53a"
     gcs_configuration: # configuration for uploading job results to GCS
-      bucket: mcn-artifacts
+      bucket: change_me_bucket
       path_strategy: explicit # or `legacy`, `single`
-      default_org: dimaunx1 # should not need this if `strategy` is set to explicit
+      default_org: mcn-org # should not need this if `strategy` is set to explicit
       default_repo: test-repo # should not need this if `strategy` is set to explicit
     gcs_credentials_secret: gcs-credentials # the name of the secret that stores the GCP service account credential JSON file, it expects the secret's key to be `service-account.json`
     ssh_key_secrets:
@@ -45,10 +45,15 @@ branch-protection:
   orgs:
     mcn-org:
       protect: true
-      required_status_checks:
-        contexts:
-        - ci-mcn-go-build
-        - ci-mcn-golanglint-ci
+      repos:
+        test-repo:
+          restrictions: # only allow admins
+            users: []
+            teams: []
+          required_status_checks:
+            contexts:
+            - ci-mcn-go-build
+            - ci-mcn-golanglint-ci
 
 tide:
   sync_period: 2m
@@ -70,7 +75,7 @@ merge_method:
 
 sinker:
   resync_period: 1m
-  max_prowjob_age: 48h
+  max_prowjob_age: 6h
   max_pod_age: 30m
 
 postsubmits:

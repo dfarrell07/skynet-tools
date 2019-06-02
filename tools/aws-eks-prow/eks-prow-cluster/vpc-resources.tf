@@ -1,6 +1,8 @@
 # Create VPC
 resource "aws_vpc" "cluster-vpc" {
-  cidr_block = "${var.vpc_index}.0.0/16"
+  cidr_block           = "${var.vpc_index}.0.0/16"
+  enable_dns_hostnames = true
+  enable_dns_support   = true
 
   tags = "${
     map(

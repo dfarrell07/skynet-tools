@@ -17,7 +17,3 @@ output "cluster_eks_version" {
 output "my-external-ip" {
   value = "${module.eks-prow-cluster.my-external-ip}"
 }
-
-//output "eks_ca_hash" {
-//  value = "${module.eks-prow-cluster.eks_ca_hash}"
-//}
