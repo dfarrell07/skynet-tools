@@ -7,11 +7,12 @@ SUBMARINER_PSK=$(cat /dev/urandom | LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 64 |
 function kind_clusters() {
     for i in 1 2 3; do
         kind create cluster --name=cluster${i} --wait=5m --config=cluster${i}-config.yaml
-        sed -i -- "s/user: kubernetes-admin/user: cluster${i}/g" $(kind get kubeconfig-path --name="cluster${i}")
-        sed -i -- "s/name: kubernetes-admin.*/name: cluster${i}/g" $(kind get kubeconfig-path --name="cluster${i}")
+        sed -i -- "s/user: kubernetes-admin/user: cluster${i}/g" "$(kind get kubeconfig-path --name=cluster${i})"
+        sed -i -- "s/name: kubernetes-admin.*/name: cluster${i}/g" "$(kind get kubeconfig-path --name=cluster${i})"
     done
 
-    export KUBECONFIG=$(kind get kubeconfig-path --name=cluster1):$(kind get kubeconfig-path --name=cluster2):$(kind get kubeconfig-path --name=cluster3)
+    KUBECONFIG=$(kind get kubeconfig-path --name=cluster1):$(kind get kubeconfig-path --name=cluster2):$(kind get kubeconfig-path --name=cluster3)
+    export KUBECONFIG
 }
 
 function install_helm() {
@@ -51,7 +52,7 @@ function setup_cluster2_gateway() {
          --set submariner.clusterCidr="$worker_ip/32" \
          --set submariner.serviceCidr="100.95.0.0/16" \
          --set submariner.natEnabled="false"
-    echo Installing netshoot container on cluster2 worker: ${worker_ip}
+    echo Installing netshoot container on cluster2 worker: "${worker_ip}"
     kubectl apply -f netshoot.yaml
     kubectl rollout status deploy/netshoot
 }
@@ -72,7 +73,7 @@ function setup_cluster3_gateway() {
          --set submariner.clusterCidr="$worker_ip/32" \
          --set submariner.serviceCidr="100.96.0.0/16" \
          --set submariner.natEnabled="false"
-    echo Installing nginx container on cluster3 worker: ${worker_ip}
+    echo Installing nginx container on cluster3 worker: "${worker_ip}"
     kubectl apply -f nginx-demo.yaml
     kubectl rollout status deploy/nginx-demo
 }
