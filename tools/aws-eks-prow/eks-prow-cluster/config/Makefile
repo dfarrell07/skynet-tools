@@ -1,7 +1,7 @@
 all: update-labels update-config update-plugins
 
-# get-cluster-credentials:
-# 		gcloud container clusters get-credentials "cluster1" --project="xxxx" --zone="xxxx"
+#get-cluster-credentials:
+#    gcloud container clusters get-credentials "cluster1" --project="xxxx" --zone="xxxx"
 
 update-config: get-cluster-credentials
     kubectl create configmap config --from-file=config.yaml=config.yaml --dry-run -o yaml | kubectl replace configmap config -f -
