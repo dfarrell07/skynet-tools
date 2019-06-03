@@ -117,6 +117,24 @@ kubectl config use-context cluster3
 kubectl get Nodes -o wide
 ```
 
+But you can also establish a set of background ssh tunnels to your kind toolbox
+
+```bash
+./run.sh tunnel toolbox-kind
+Started backround ssh redirecting ports 45697 34754 45892
+Warning: Permanently added '38.145.34.212' (ECDSA) to the list of known hosts.
+
+you can stop the ssh tunnel by running: kill -9 14884; rm /tmp/kind_tunnel.pid
+
+use:
+  export KUBECONFIG=/Users/ajo/Documents/work/redhat/skynet-tools/creds/kind-config-cluster1:/Users/ajo/Documents/work/redhat/skynet-tools/creds/kind-config-cluster2:/Users/ajo/Documents/work/redhat/skynet-tools/creds/kind-config-cluster3
+
+CURRENT   NAME       CLUSTER    AUTHINFO   NAMESPACE
+          cluster1   cluster1   cluster1
+          cluster2   cluster2   cluster2
+*         cluster3   cluster3   cluster3
+```
+
 # ./run.sh help
 
 To get specific help for one of the actions/deployment types, for example openshift-cluster

@@ -27,22 +27,21 @@
           echo export KUBECONFIG=/home/centos/.kube/kind-config-cluster1:/home/centos/.kube/kind-config-cluster2:/home/centos/.kube/kind-config-cluster3 >> /home/centos/.bash_profile
         become: true
 
+      - name: ansible create local directory for credentials
+        local_action:
+          module: file
+          path: ../creds
+          state: directory
+
       - name: fetch kubeconfig files to local creds directory
         fetch:
-          src: "/home/centos/.kube/kind-config-cluster{{ item }}"
+          src: "/home/centos/.kube/kind-config-{{ item }}"
           dest:  "../creds/"
           flat: yes
         with_items:
-          - 1
-          - 2
-          - 3
-
-      - name: replace localhost in config file, with remote IP
-        local_action: replace path="../creds/kind-config-cluster{{ item }}" regexp='localhost' replace="{{ ansible_ssh_host }}"
-        with_items:
-          - 1
-          - 2
-          - 3
+          - cluster1
+          - cluster2
+          - cluster3
 
       tags:
         - kindsubm-deploy

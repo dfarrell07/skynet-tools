@@ -21,6 +21,7 @@ Usage: $0 <action> ...
 
   $0 deploy   <deployment-type> ...  Deploy on the specified cloud.
   $0 destroy  <deployment-type> ...  Destroy the specified deployment
+  $0 tunnel   <deployment-type> ...  Create ssh tunnels to reach the remote API
   $0 ping                            Ping all instances on inventory
 
 Deployment types:
@@ -198,6 +199,14 @@ case "$ACTION" in
            shift;
            check_deployment_type
            ;;
+   tunnel) DEPLOYMENT_TYPE=$1
+           check_deployment_type
+           if [ "$DEPLOYMENT_TYPE" != "toolbox-kind" ]; then
+              echo "ERROR: tunnel action is only supported with toolbox-kind" >&2
+              exit 2
+           fi
+           shift
+           ;;
    ping) PING_GROUP=$1;
          shift
          ;;
@@ -348,8 +357,7 @@ deploy_toolbox_kind() {
                          $DIR/ansible/kindsubm.yml \
                          -i $DIR/ansible/inventory \
                          -t kindsubm-deploy \
-                         ${OPT_SKIP_TAGS[@]} \
-                         --start-at-task="replace localhost in config file, with remote IP"
+                         ${OPT_SKIP_TAGS[@]}
 }
 
 destroy_toolbox_kind() {
@@ -529,6 +537,66 @@ destroy_rdo_networks() {
                      ${OPT_SKIP_TAGS[@]}
 }
 
+find_redirect_ports() {
+    grep -h -E -o localhost:[0-9]+  creds/kind-config-cluster* | grep -E -o [0-9]+
+}
+
+find_toolbox_ip() {
+    grep -h -E -o ansible_ssh_host=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+  ansible/inventory/toolbox-inventory \
+        | grep -E -o [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+
+}
+
+get_abs_filename() {
+  # $1 : relative filename
+  echo "$(cd "$(dirname "$1")" && pwd)/$(basename "$1")"
+}
+
+tunnel_toolbox_kind() {
+    KUBE_PORTS="$(find_redirect_ports)"
+    if [[ "x$KUBE_PORTS" == "x" ]]; then
+        echo "No remote kubernetes ports found in creds/kind-config-cluster*" >&2
+        exit 1
+    fi
+
+    TOOLBOX_IP="$(find_toolbox_ip)"
+    if [[ "x$TOOLBOX_IP" == "x" ]]; then
+        echo "Couldn't find the IP address from the toolbox-inventory" >&2
+        exit 1
+    fi
+    SSH_REDIRECT="-o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no -o ExitOnForwardFailure=yes"
+    for port in $KUBE_PORTS; do
+        SSH_REDIRECT="${SSH_REDIRECT} -L${port}:localhost:${port}"
+    done
+
+    # kill any preexisting tunnel
+    if [[ -f /tmp/kind_tunnel.pid ]]; then
+        kill -9 $(cat /tmp/kind_tunnel.pid); rm /tmp/kind_tunnel.pid
+    fi
+
+    ssh centos@$TOOLBOX_IP $SSH_REDIRECT "while true; do sleep 3600; done;" &
+    echo $! > /tmp/kind_tunnel.pid
+
+    echo Started backround ssh redirecting ports $KUBE_PORTS
+
+    sleep 4
+
+    ABS=$(get_abs_filename creds/kind-config-cluster1)
+    for i in 2 3; do
+       ABS="${ABS}:$(get_abs_filename creds/kind-config-cluster${i})"
+    done
+
+    echo ""
+    echo "you can stop the ssh tunnel by running: kill -9 $(cat /tmp/kind_tunnel.pid); rm /tmp/kind_tunnel.pid"
+    echo ""
+    echo "use:"
+    echo "  export KUBECONFIG=$ABS"
+    echo ""
+
+    export KUBECONFIG=$ABS
+
+    kubectl config get-contexts
+}
+
 ############################################
 #    Actions                               #
 ############################################
@@ -543,6 +611,10 @@ destroy() {
 
 ping() {
     ansible -m ping -i ansible/inventory/ ${PING_GROUP:-all}
+}
+
+tunnel() {
+    tunnel_${DEPLOYMENT_TYPE/-/_}
 }
 
 ############################################
