@@ -1,0 +1,10 @@
+appVersion: v0.0.1
+description: Submariner
+home: https://submariner.io/
+maintainers:
+- email: charts@rancher.com
+  name: Rancher Labs
+name: submariner
+sources:
+- https://github.com/rancher/submariner-charts
+version: 0.0.1

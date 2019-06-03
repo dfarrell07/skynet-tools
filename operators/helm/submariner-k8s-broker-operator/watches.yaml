@@ -1,0 +1,5 @@
+---
+- version: v1alpha1
+  group: charts.helm.k8s.io
+  kind: SubmarinerK8SBroker
+  chart: /opt/helm/helm-charts/submariner-k8s-broker

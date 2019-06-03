@@ -1,0 +1,19 @@
+apiVersion: apiextensions.k8s.io/v1beta1
+kind: CustomResourceDefinition
+metadata:
+  name: submarinerk8sbrokers.charts.helm.k8s.io
+spec:
+  group: charts.helm.k8s.io
+  names:
+    kind: SubmarinerK8SBroker
+    listKind: SubmarinerK8SBrokerList
+    plural: submarinerk8sbrokers
+    singular: submarinerk8sbroker
+  scope: Namespaced
+  subresources:
+    status: {}
+  version: v1alpha1
+  versions:
+  - name: v1alpha1
+    served: true
+    storage: true

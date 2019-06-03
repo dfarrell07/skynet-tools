@@ -1,0 +1,31 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: submariner-k8s-broker-operator
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      name: submariner-k8s-broker-operator
+  template:
+    metadata:
+      labels:
+        name: submariner-k8s-broker-operator
+    spec:
+      serviceAccountName: submariner-k8s-broker-operator
+      containers:
+        - name: submariner-k8s-broker-operator
+          # Replace this with the built image name
+          image: REPLACE_IMAGE
+          imagePullPolicy: Always
+          env:
+            - name: WATCH_NAMESPACE
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.namespace
+            - name: POD_NAME
+              valueFrom:
+                fieldRef:
+                  fieldPath: metadata.name
+            - name: OPERATOR_NAME
+              value: "submariner-k8s-broker-operator"
