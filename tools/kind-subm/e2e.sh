@@ -1,21 +1,23 @@
 #!/usr/bin/env bash
+set -eE
 
 SUBMARINER_BROKER_NS=submariner-k8s-broker
 SUBMARINER_PSK=$(cat /dev/urandom | LC_CTYPE=C tr -dc 'a-zA-Z0-9' | fold -w 64 | head -n 1)
 
 function kind_clusters() {
-    for i in {1..3}; do
-        kind create cluster --name=cluster$i --wait=5m --config=cluster$i-config.yaml
-        sed -i -- "s/user: kubernetes-admin/user: cluster$i/g" $(kind get kubeconfig-path --name="cluster$i")
-        sed -i -- "s/name: kubernetes-admin.*/name: cluster$i/g" $(kind get kubeconfig-path --name="cluster$i")
+    for i in 1 2 3; do
+        kind create cluster --name=cluster${i} --wait=5m --config=cluster${i}-config.yaml
+        sed -i -- "s/user: kubernetes-admin/user: cluster${i}/g" "$(kind get kubeconfig-path --name=cluster${i})"
+        sed -i -- "s/name: kubernetes-admin.*/name: cluster${i}/g" "$(kind get kubeconfig-path --name=cluster${i})"
     done
 
-    export KUBECONFIG=$(kind get kubeconfig-path --name=cluster1):$(kind get kubeconfig-path --name=cluster2):$(kind get kubeconfig-path --name=cluster3)
+    KUBECONFIG=$(kind get kubeconfig-path --name=cluster1):$(kind get kubeconfig-path --name=cluster2):$(kind get kubeconfig-path --name=cluster3)
+    export KUBECONFIG
 }
 
 function install_helm() {
-    for i in {1..3}; do
-        kubectl config use-context cluster$i
+    for i in 1 2 3; do
+        kubectl config use-context cluster${i}
         kubectl -n kube-system create serviceaccount tiller
         kubectl create clusterrolebinding tiller --clusterrole=cluster-admin --serviceaccount=kube-system:tiller
         helm init --service-account tiller
@@ -50,23 +52,9 @@ function setup_cluster2_gateway() {
          --set submariner.clusterCidr="$worker_ip/32" \
          --set submariner.serviceCidr="100.95.0.0/16" \
          --set submariner.natEnabled="false"
-    echo Installing netshoot container on cluster2 worker: $worker_ip
-    cat <<EOF | kubectl apply -f -
-apiVersion: v1
-kind: Pod
-metadata:
-  name: netshoot
-  namespace: default
-spec:
-  containers:
-    - name: netshoot
-      image: nicolaka/netshoot
-      imagePullPolicy: IfNotPresent
-      command:
-        - sleep
-        - "3600"
-  restartPolicy: Always
-EOF
+    echo Installing netshoot container on cluster2 worker: "${worker_ip}"
+    kubectl apply -f netshoot.yaml
+    kubectl rollout status deploy/netshoot
 }
 
 function setup_cluster3_gateway() {
@@ -85,46 +73,19 @@ function setup_cluster3_gateway() {
          --set submariner.clusterCidr="$worker_ip/32" \
          --set submariner.serviceCidr="100.96.0.0/16" \
          --set submariner.natEnabled="false"
-    echo Installing nginx container on cluster3 worker: $worker_ip
-    cat <<EOF | kubectl apply -f -
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: nginx-demo
-spec:
-  selector:
-    matchLabels:
-      app: nginx-demo
-  replicas: 2
-  template:
-    metadata:
-      labels:
-        app: nginx-demo
-    spec:
-      containers:
-        - name: nginx-demo
-          image: nginx:alpine
-          ports:
-            - containerPort: 80
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: nginx-demo
-  labels:
-    app: nginx-demo
-spec:
-  type: ClusterIP
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 80
-  selector:
-    app: nginx-demo
-EOF
+    echo Installing nginx container on cluster3 worker: "${worker_ip}"
+    kubectl apply -f nginx-demo.yaml
+    kubectl rollout status deploy/nginx-demo
 }
 
-helm init
+function cleanup {
+  echo "Cleanup"
+  for i in 1 2 3; do kind delete cluster --name=cluster${i}; done
+}
+
+trap cleanup ERR
+
+helm init --client-only
 helm repo add submariner-latest https://releases.rancher.com/submariner-charts/latest
 helm repo update
 

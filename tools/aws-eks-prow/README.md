@@ -187,12 +187,11 @@ kubectl get ing prow-ing | awk ' FNR == 2 {print $3}'
 ```
 
 - Create CNAME or ALIAS dns record to point to alb ingress dns.
-
 - Modify the plank settings in ***config.yaml*** in the eks-prow-cluster/config folder to match your dns name.
-- Apply changes
+- Apply changes.
 
 ```bash
-cd eks-prow-cluster/config/ 
+cd eks-prow-cluster/config/
 make
 ```
 
