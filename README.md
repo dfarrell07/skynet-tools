@@ -62,7 +62,7 @@ Common options:
 
 ## openstack credentials
 
-For interacting with openstach/RDO you will need to setup your credentials in
+For interacting with openstack/RDO you will need to setup your credentials in
 ansible/clouds.yml.
 
 ```bash
