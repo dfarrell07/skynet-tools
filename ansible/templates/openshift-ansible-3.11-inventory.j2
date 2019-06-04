@@ -71,3 +71,10 @@ osm_cluster_network_cidr={{ pod_cidr }}
 # default is 172.30.0.0/16, avoid 172.17.0.0/16 (docker0 range)
 openshift_portal_net={{ service_cidr }}
 {% endif %}
+
+[{{ cluster_name }}:vars]
+{% if ssh_private_key %}
+ansible_ssh_private_key_file={{ ssh_private_key }}
+{% endif %}
+host_key_checking=false
+ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'

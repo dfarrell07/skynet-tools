@@ -49,6 +49,9 @@ Common options:
                    the ssh key name you want to use for deployment
                    on the cloud, will get saved to ansible/inventory/.ssh_key_name
                    for next runs
+   -K, --ssh-private-key
+                   path to ssh private key file to be used to ssh to VMs on the
+                   cloud, defaults to $HOME/.ssh/id_rsa
    -h              help for the specific deployment type/action
    -n, --name      unique name of the deployment
    -s, --skip-networks
@@ -169,6 +172,9 @@ Common options:
                    the ssh key name you want to use for deployment
                    on the cloud, will get saved to ansible/inventory/.ssh_key_name
                    for next runs
+   -K, --ssh-private-key
+                   path to ssh private key file to be used to ssh to VMs on the
+                   cloud, defaults to $HOME/.ssh/id_rsa
    -h              help for the specific deployment type/action
    -n, --name      unique name of the deployment
    -s, --skip-networks
@@ -203,3 +209,10 @@ when instances are created. To do that, you need to specify at least
 once the key names
 
 Find what you have by running `openstack keypair list`
+
+## Your ssh private key file
+
+The ssh private key that is required to ssh to VM instances created
+in the cloud. This is the key downloaded when you created ssh key-pair.
+If you used your own public key, this is the private counterpart of
+the public key used to create the openstack ssh-keypair.

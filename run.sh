@@ -1,6 +1,7 @@
 #!/bin/bash
 
 DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+export ANSIBLE_HOST_KEY_CHECKING=false
 
 banner() {
 echo "-------------------------------------------------------------------------------"
@@ -53,6 +54,9 @@ Common options:
                    the ssh key name you want to use for deployment
                    on the cloud, will get saved to ansible/inventory/.ssh_key_name
                    for next runs
+   -K, --ssh-private-key
+                   path to ssh private key file to be used to ssh to VMs on the
+                   cloud, defaults to $HOME/.ssh/id_rsa
    -h              help for the specific deployment type/action
    -n, --name      unique name of the deployment
    -s, --skip-networks
@@ -231,6 +235,7 @@ OPT_MANAGER_HOST="localhost"
 OPT_SSH_KEY=$(cat $DIR/ansible/inventory/.ssh_key_name 2>/dev/null)
 OPT_POD_CIDR=10.128.0.0/14
 OPT_SERVICE_CIDR=172.30.0.0/16
+OPT_PRIVATE_SSH_KEY=$HOME/.ssh/id_rsa
 
 while [ "x$1" != "x" ]; do
     case "$1" in
@@ -292,6 +297,11 @@ while [ "x$1" != "x" ]; do
         --ssh-key-name|-k)
             OPT_SSH_KEY=$2
             echo $OPT_SSH_KEY > $DIR/ansible/inventory/.ssh_key_name
+            shift
+            ;;
+
+        --ssh-private-key|-K)
+            OPT_SSH_PRIVATE_KEY=$2
             shift
             ;;
 
@@ -434,6 +444,7 @@ deploy_openshift_cluster() {
                          ${OPT_VARS[@]} \
                          -e manager_host=$OPT_MANAGER_HOST \
                          -e ssh_key_name=$OPT_SSH_KEY \
+                         -e ssh_private_key=$OPT_SSH_PRIVATE_KEY \
                          -e cluster_name=$OPT_NAME \
                          ${OPT_SKIP_TAGS[@]} \
                          $DIR/ansible/os-cluster-4.yml \
@@ -452,6 +463,7 @@ deploy_openshift_cluster() {
                          ${OPT_VARS[@]} \
                          -e manager_host=$OPT_MANAGER_HOST \
                          -e ssh_key_name=$OPT_SSH_KEY \
+                         -e ssh_private_key=$OPT_SSH_PRIVATE_KEY \
                          -e cluster_name=$OPT_NAME \
                          -e pod_cidr=$OPT_POD_CIDR \
                          -e service_cidr=$OPT_SERVICE_CIDR \
