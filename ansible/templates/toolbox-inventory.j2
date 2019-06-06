@@ -2,3 +2,10 @@
 {% for host in hosts if 'toolbox' in host.groups %}
 {{ host.host }} ansible_ssh_host={{ host.ip }} host_key_checking=False ansible_ssh_extra_args='-o StrictHostKeyChecking=no'
 {% endfor %}
+
+[toolboxes:vars]
+{% if ssh_private_key %}
+ansible_ssh_private_key_file={{ ssh_private_key }}
+{% endif %}
+host_key_checking=false
+ansible_ssh_common_args='-o StrictHostKeyChecking=no -o UserKnownHostsFile=/dev/null'

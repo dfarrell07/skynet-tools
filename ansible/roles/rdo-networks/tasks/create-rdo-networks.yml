@@ -81,6 +81,13 @@
     name: openshifts
     description: Allow basic ports of openshift operation
 
+- name: Create remote security group
+  os_security_group_rule:
+    cloud: rdocloud
+    state: present
+    security_group: openshifts
+    remote_group: openshifts
+
 - name: Open HTTP, HTTPS and 8443 for openshift
   os_security_group_rule:
     cloud: rdocloud
