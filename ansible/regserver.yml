@@ -1,0 +1,5 @@
+---
+- hosts: toolbox
+  remote_user: centos
+  roles:
+    - role: regserver

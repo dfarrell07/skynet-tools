@@ -43,3 +43,10 @@
     name: kind_ports
     description: Let kind ports go in
 
+- name: Delete https security group
+  os_security_group:
+    cloud: rdocloud
+    state: absent
+    name: kind_ports
+    description: Allow https acces
+

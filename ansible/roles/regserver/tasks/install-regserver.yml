@@ -1,0 +1,21 @@
+---
+- name: create directories if they don't exist
+  file:
+    path: "{{ item }}"
+    state: directory
+  with_items:
+    - "{{ ansible_env.HOME }}/certs"
+    - "{{ ansible_env.HOME }}/auth"
+
+- name: Create self signed certificate
+  shell: 'openssl req -newkey rsa:4096 -nodes -sha256 -keyout {{ ansible_env.HOME }}/certs/domain.key -x509 -days 365 -subj "/C=/ST=/L=/O=/OU=/CN={{ regserver_name }}/emailAddress={{ regserver_user }}@{{ regserver_name }}" -out {{ ansible_env.HOME }}/certs/domain.crt'
+
+- name: Create basic auth
+  shell: docker run --entrypoint htpasswd registry:2 -Bbn {{ regserver_user }} {{ regserver_passwd }} > auth/htpasswd
+  become: yes
+
+
+- name: Run docker registry
+  shell: docker run -d  --restart=always --name registry -v {{ ansible_env.HOME }}/auth:/auth  -e "REGISTRY_AUTH=htpasswd"  -e "REGISTRY_AUTH_HTPASSWD_REALM=Registry Realm" -e "REGISTRY_AUTH_HTPASSWD_PATH=/auth/htpasswd" -v {{ ansible_env.HOME }}/certs:/certs -e REGISTRY_HTTP_ADDR=0.0.0.0:443 -e REGISTRY_HTTP_TLS_CERTIFICATE=/certs/domain.crt -e REGISTRY_HTTP_TLS_KEY=/certs/domain.key -p 443:443 --privileged registry:2
+  become: yes
+

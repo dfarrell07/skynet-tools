@@ -32,6 +32,9 @@ Deployment types:
 
   toolbox-kind      Used to deploy 3 kind clusters + submariners in the toolbox VM
 
+  regserver         Used to deploy private docker registry server in the toolbox VM
+                    This requires toolbox to already be deployed.
+
   openshift-cluster Used to manage a single cluster
 
   rdo-networks      Used to cleanup or create default working RDO networks and
@@ -76,13 +79,13 @@ $ vim ansible/clouds.yml
 ## Deploying a 3.11 openshift cluster
 
 ```bash
-./run.sh deploy openshift-cluster -v 3.11 -n c0 -k mbp-ajo
+./run.sh deploy openshift-cluster -v 3.11 -n c0 -k mbp-ajo -K <path-to-private-ssh-key>
 ```
 
 ## Deploying a second 3.11 openshift cluster
 
 ```bash
-./run.sh deploy openshift-cluster -v 3.11 -n c1 --pod-cidr 10.132.0.0/14 --service-cidr 172.31.0.0/16
+./run.sh deploy openshift-cluster -v 3.11 -n c1 --pod-cidr 10.132.0.0/14 --service-cidr 172.31.0.0/16 -K <path-to-private-ssh-key>
 ```
 
 ## Deploying a 4.00 openshift cluster
@@ -102,7 +105,13 @@ $ vim ansible/clouds.yml
 You can deploy a toolbox using the following command:
 
 ```bash
-./run.sh deploy toolbox
+./run.sh deploy toolbox -K <path-to-private-ssh-key>
+```
+
+You can then create a docker registry server with following command:
+
+```bash
+./run deploy regserver -K <path-to-private-ssh-key>
 ```
 
 And setup 3 kubernetes-in-docker clusters + submariner with:
