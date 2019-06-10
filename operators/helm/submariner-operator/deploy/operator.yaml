@@ -16,7 +16,7 @@ spec:
       containers:
         - name: submariner-operator
           # Replace this with the built image name
-          image: docker.io/dfarrell07/submariner:test
+          image: docker.io/dfarrell07/submariner-helm-operator:test
           imagePullPolicy: Always
           env:
             - name: WATCH_NAMESPACE

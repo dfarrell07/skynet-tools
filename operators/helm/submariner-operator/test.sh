@@ -17,8 +17,8 @@ if ! minikube status | grep Running; then
 fi
 
 # Build/push/update SubM Operator image
-operator-sdk build docker.io/dfarrell07/submariner:test
-docker push docker.io/dfarrell07/submariner:test
+operator-sdk build docker.io/dfarrell07/submariner-helm-operator:test
+docker push docker.io/dfarrell07/submariner-helm-operator:test
 
 # Create SubM CRD
 if ! kubectl get crds | grep submariners.charts.helm.k8s.io; then
