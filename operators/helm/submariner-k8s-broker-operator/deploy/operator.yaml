@@ -12,11 +12,11 @@ spec:
       labels:
         name: submariner-k8s-broker-operator
     spec:
-      serviceAccountName: submariner-k8s-broker-operator
+      serviceAccountName: submariner-k8s-broker-helm-operator
       containers:
         - name: submariner-k8s-broker-operator
           # Replace this with the built image name
-          image: REPLACE_IMAGE
+          image: dfarrell07/submariner-broker-operator:test
           imagePullPolicy: Always
           env:
             - name: WATCH_NAMESPACE
