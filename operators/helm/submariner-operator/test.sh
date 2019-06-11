@@ -54,7 +54,6 @@ fi
 
 # Create SubM Operator Deployment
 if ! kubectl get deployments | grep submariner-operator; then
-  kubectl get deployments 2>&1 | grep -q "No resources found"
   kubectl create -f deploy/operator.yaml | grep "deployment.apps/submariner-operator created"
   kubectl get deployments | grep submariner-operator
   # Show there is not a submariner CR
@@ -68,19 +67,20 @@ if ! (kubectl get crds | grep clusters.submariner.io && kubectl get crds | grep 
   kubectl get crds | grep endpoints.submariner.io && false || true
   # Create the SubM Op CR, which will create endpoints and clusters CRDs
   kubectl apply -f deploy/crds/charts_v1alpha1_submariner_cr.yaml
-  # Wait for the SubM Operator to create clusters and endpoints CRDs
-  while ! kubectl get crds | grep clusters.submariner.io; do sleep 2; done
-  while ! kubectl get crds | grep endpoints.submariner.io; do sleep 2; done
+  # Show SubM Operator resources running
+  kubectl get submariner | grep example-submariner
 fi
 
-# Show SubM Operator resources running
-kubectl get submariner | grep example-submariner
+# Wait for the SubM Operator to create clusters and endpoints CRDs
+while ! kubectl get crds | grep clusters.submariner.io; do sleep 2; done
+while ! kubectl get crds | grep endpoints.submariner.io; do sleep 2; done
 
 # Additional commands to inspect the functions of the Operator pod
-# TODO: Exact pod name and verify these automatically
-#kubectl exec -it submariner-operator-bb6bc5d4-nw2nj -- cat /usr/local/bin/entrypoint
-#kubectl exec -it submariner-operator-bb6bc5d4-nw2nj -- ls -lh /usr/local/bin/helm-operator
-#kubectl exec -it submariner-operator-bb6bc5d4-nw2nj -- cat /opt/helm/watches.yaml
-#kubectl exec -it submariner-operator-bb6bc5d4-nw2nj -- ls -lhR /opt/helm/helm-charts/submariner
-# Note the expected-errors about CRDs already existing:
-#kubectl exec -it submariner-operator-bb6bc5d4-nw2nj -- /usr/local/bin/helm-operator run helm --watches-file=/opt/helm/watches.yaml
+subm_operator_pod_name=$(kubectl get pods -l name=submariner-operator -o=jsonpath='{.items..metadata.name}')
+kubectl exec -it $subm_operator_pod_name -- cat /usr/local/bin/entrypoint
+kubectl exec -it $subm_operator_pod_name -- ls -lh /usr/local/bin/helm-operator
+kubectl exec -it $subm_operator_pod_name -- cat /opt/helm/watches.yaml
+kubectl exec -it $subm_operator_pod_name -- ls -lhR /opt/helm/helm-charts/submariner
+# TODO: Make this non-interactive if going to test
+# Note the expected-errors about CRDs already existing
+#kubectl exec -it $subm_operator_pod_name -- /usr/local/bin/helm-operator run helm --watches-file=/opt/helm/watches.yaml
