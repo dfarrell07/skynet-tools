@@ -1,4 +1,0 @@
----
-networks:
-  private_k8s:
-    cidr: 10.0.0.0/24
