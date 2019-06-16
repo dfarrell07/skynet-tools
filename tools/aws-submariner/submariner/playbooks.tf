@@ -5,11 +5,11 @@ resource "null_resource" "empty_inventory" {
 }
 
 data "template_file" "ansible_inventory_template" {
-  template = "${file("${path.module}/templates/inventory.tmpl")}"
+  template = file("${path.module}/templates/inventory.tmpl")
 
-  vars {
-    broker_node          = "${var.broker_node}"
-    gateway_master_nodes = "${var.gateway_master_node}"
+  vars = {
+    broker_node          = var.broker_node
+    gateway_master_nodes = var.gateway_master_node
   }
 
   depends_on = [
@@ -18,7 +18,7 @@ data "template_file" "ansible_inventory_template" {
 }
 
 resource "local_file" "ansible_inventory_broker" {
-  content  = "${data.template_file.ansible_inventory_template.rendered}"
+  content  = data.template_file.ansible_inventory_template.rendered
   filename = "./ansible/tmp/inventory-submariner-${var.cluster_name}.yml"
 
   depends_on = [
@@ -38,9 +38,9 @@ resource "null_resource" "run_ansible" {
    EOT
   }
 
-//  triggers {
-//    random = "${uuid()}"
-//  }
+  //  triggers {
+  //    random = "${uuid()}"
+  //  }
 
   depends_on = ["local_file.ansible_inventory_broker"]
 }

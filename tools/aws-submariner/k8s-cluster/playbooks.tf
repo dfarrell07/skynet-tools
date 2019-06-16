@@ -5,11 +5,11 @@ resource "null_resource" "empty_inventory" {
 }
 
 data "template_file" "ansible_inventory_template" {
-  template = "${file("${path.module}/templates/inventory.tmpl")}"
+  template = file("${path.module}/templates/inventory.tmpl")
 
-  vars {
-    master_dns       = "${aws_instance.k8s_master_node.public_dns}"
-    worker_nodes_dns = "${join("\"\n\"", aws_instance.k8s_node.*.public_dns)}"
+  vars = {
+    master_dns       = aws_instance.k8s_master_node.public_dns
+    worker_nodes_dns = join("\"\n\"", aws_instance.k8s_node.*.public_dns)
   }
 
   depends_on = [
@@ -18,7 +18,7 @@ data "template_file" "ansible_inventory_template" {
 }
 
 resource "local_file" "ansible_inventory_broker" {
-  content  = "${data.template_file.ansible_inventory_template.rendered}"
+  content  = data.template_file.ansible_inventory_template.rendered
   filename = "./ansible/tmp/inventory-${var.base_name}.yml"
 
   depends_on = [
@@ -39,8 +39,8 @@ resource "null_resource" "run_ansible_kube_cluster" {
    EOT
   }
 
-  triggers {
-    random = "${uuid()}"
+  triggers = {
+    random = uuid()
   }
 
   depends_on = [

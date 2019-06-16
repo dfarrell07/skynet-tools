@@ -21,12 +21,12 @@ POLICY
 # Attach required by EKS service policies.
 resource "aws_iam_role_policy_attachment" "eks-cluster-AmazonEKSClusterPolicy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSClusterPolicy"
-  role = "${aws_iam_role.master-role.id}"
+  role = aws_iam_role.master-role.id
 }
 
 resource "aws_iam_role_policy_attachment" "eks-cluster-AmazonEKSServicePolicy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSServicePolicy"
-  role = "${aws_iam_role.master-role.id}"
+  role = aws_iam_role.master-role.id
 }
 
 # Create worker nodes iam policies.
@@ -51,7 +51,7 @@ POLICY
 
 resource "aws_iam_role_policy" "worker_alb_ingress_policy" {
   name = "${var.cluster_name}_worker_alb_ingress__policy"
-  role = "${aws_iam_role.worker-role.id}"
+  role = aws_iam_role.worker-role.id
 
   policy = <<EOF
 {
@@ -177,22 +177,22 @@ EOF
 
 resource "aws_iam_role_policy_attachment" "worker-AmazonEKSWorkerNodePolicy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKSWorkerNodePolicy"
-  role = "${aws_iam_role.worker-role.id}"
+  role = aws_iam_role.worker-role.id
 }
 
 resource "aws_iam_role_policy_attachment" "worker-AmazonEKS_CNI_Policy" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEKS_CNI_Policy"
-  role = "${aws_iam_role.worker-role.id}"
+  role = aws_iam_role.worker-role.id
 }
 
 resource "aws_iam_role_policy_attachment" "worker-AmazonEC2ContainerRegistryReadOnly" {
   policy_arn = "arn:aws:iam::aws:policy/AmazonEC2ContainerRegistryReadOnly"
-  role = "${aws_iam_role.worker-role.id}"
+  role = aws_iam_role.worker-role.id
 }
 
 resource "aws_iam_instance_profile" "worker-instance-profile" {
   name = "${var.cluster_name}-worker-role"
-  role = "${aws_iam_role.worker-role.id}"
+  role = aws_iam_role.worker-role.id
 }
 
 resource "aws_iam_user" "aditional-admin-user" {

@@ -152,7 +152,7 @@ gcloud iam service-accounts keys create --iam-account "${identifier}" service-ac
 kubectl create secret generic gcs-credentials --from-file=service-account.json # step 6
 ```
 
-- Label on of the nodes for ghproxy
+- Label one of the nodes for ghproxy
 
 ```bash
 kubectl get nodes -o wide | awk 'FNR > 1 {print $1}'

@@ -22,7 +22,7 @@ EOF
 
 resource "aws_iam_role_policy" "master_policy" {
   name = "${var.base_name}_master_policy"
-  role = "${aws_iam_role.master_instance_role.id}"
+  role = aws_iam_role.master_instance_role.id
 
   policy = <<EOF
 {
@@ -169,7 +169,7 @@ EOF
 
 resource "aws_iam_instance_profile" "master_instance_profile" {
   name = "${var.base_name}_master_instance_profile"
-  role = "${aws_iam_role.master_instance_role.id}"
+  role = aws_iam_role.master_instance_role.id
 }
 
 # Create EC2 IAM role for node instance.
@@ -196,7 +196,7 @@ EOF
 
 resource "aws_iam_role_policy" "node_policy" {
   name = "${var.base_name}_node_policy"
-  role = "${aws_iam_role.node_instance_role.id}"
+  role = aws_iam_role.node_instance_role.id
 
   policy = <<EOF
 {
@@ -322,5 +322,5 @@ EOF
 
 resource "aws_iam_instance_profile" "node_instance_profile" {
   name = "${var.base_name}_node_instance_profile"
-  role = "${aws_iam_role.node_instance_role.id}"
+  role = aws_iam_role.node_instance_role.id
 }
