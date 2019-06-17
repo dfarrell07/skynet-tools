@@ -18,6 +18,7 @@ spec:
           image: nginx:alpine
           ports:
             - containerPort: 80
+
 ---
 apiVersion: v1
 kind: Service
@@ -25,8 +26,13 @@ metadata:
   name: nginx-demo
   labels:
     app: nginx-demo
+  annotations:
+    service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-unhealthy-threshold: "2"
+    service.beta.kubernetes.io/aws-load-balancer-healthcheck-healthy-threshold: "2"
+    service.beta.kubernetes.io/aws-load-balancer-connection-idle-timeout: "180"
 spec:
-  type: ClusterIP
+  type: LoadBalancer
   ports:
     - protocol: TCP
       port: 80

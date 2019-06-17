@@ -212,3 +212,21 @@
   add_host:
     name: "master"
     discovery_token_ca_cert_hash: "{{ discovery_token_ca_cert_hash.stdout }}"
+
+- name: Copy remote kube config to local
+  fetch:
+    src: /home/{{ aws_ssh_user }}/.kube/admin.conf
+    dest: ./tmp/{{ cluster_name }}-conf
+    flat: yes
+
+- name: Modify kubeconfig {{ cluster_name }} user
+  command: 'sed -i -- "s/user: kubernetes-admin/user: {{ cluster_name }}/g" ./tmp/{{ cluster_name }}-conf'
+  delegate_to: 127.0.0.1
+
+- name: Modify kubeconfig {{ cluster_name }} context
+  command: 'sed -i -- "s/name: kubernetes-admin.*/name: {{ cluster_name }}/g" ./tmp/{{ cluster_name }}-conf'
+  delegate_to: 127.0.0.1
+
+- name: Modify kubeconfig {{ cluster_name }} server
+  command: 'sed -i -- "s/server: .*/server: https:\/\/{{ master_external_ip }}:{{ master_bind_port }}/g" ./tmp/{{ cluster_name }}-conf'
+  delegate_to: 127.0.0.1

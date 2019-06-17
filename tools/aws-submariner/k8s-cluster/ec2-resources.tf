@@ -122,7 +122,7 @@ resource "aws_instance" "k8s_master_node" {
   monitoring                  = false
   ebs_optimized               = false
   iam_instance_profile        = aws_iam_instance_profile.master_instance_profile.id
-  key_name                    = var.key_name
+  key_name                    = var.aws_key_name
   associate_public_ip_address = true
 
   root_block_device {
@@ -143,7 +143,7 @@ resource "aws_instance" "k8s_node" {
   monitoring                  = false
   ebs_optimized               = false
   iam_instance_profile        = aws_iam_instance_profile.node_instance_profile.id
-  key_name                    = var.key_name
+  key_name                    = var.aws_key_name
   user_data                   = data.template_file.ecs_user_data.rendered
   associate_public_ip_address = true
   source_dest_check           = false

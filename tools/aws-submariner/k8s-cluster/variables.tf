@@ -11,8 +11,16 @@ variable "base_name" {
   description = "Base name for all resources"
 }
 
-variable "key_name" {
-  description = "aws pem key."
+variable "cluster_name" {
+  description = "K8S cluster name"
+}
+
+variable "aws_key_name" {
+  description = "aws pem key name."
+}
+
+variable "local_key_name" {
+  description = "local pem key name."
 }
 
 variable "number_workers_nodes" {
@@ -51,6 +59,6 @@ variable "master_bind_port" {
 }
 
 variable "allowed_ips" {
-  type = "list"
+  type        = "list"
   description = "List of ips that are allowed all traffic."
 }

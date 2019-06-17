@@ -24,7 +24,7 @@ resource "aws_internet_gateway" "env_vpc_igw" {
 # Create DHCP options set
 resource "aws_vpc_dhcp_options" "env_vpc_dopts" {
   domain_name_servers = ["AmazonProvidedDNS"]
-  domain_name         = "${data.aws_region.current.name}.compute.internal"
+  domain_name         = "ec2.internal"
 
   tags = {
     Name = "${var.base_name}-vpc-dopts"

@@ -1,9 +1,13 @@
-variable "key_name" {
-  description = "aws pem key."
+variable "aws_key_name" {
+  description = "aws pem key name."
 }
 
-variable "pod_cidr" {
-  description = "Kubernetes pods cidr."
+variable "local_key_name" {
+  description = "local pem key name."
+}
+
+variable "service_cidr" {
+  description = "Kubernetes service cidr."
 }
 
 variable "aws_ssh_user" {

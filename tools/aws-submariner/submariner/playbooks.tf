@@ -30,11 +30,11 @@ resource "null_resource" "run_ansible" {
   provisioner "local-exec" {
     command = <<EOT
         ANSIBLE_HOST_KEY_CHECKING=False ansible-playbook ./ansible/site.yml \
-        -u ${var.aws_ssh_user} --private-key ~/.ssh/${var.key_name} \
+        -u ${var.aws_ssh_user} --private-key ~/.ssh/${var.local_key_name} \
         -i ./ansible/tmp/inventory-submariner-${var.cluster_name}.yml \
         --extra-vars "aws_ssh_user=${var.aws_ssh_user} cluster_name=${var.cluster_name}\
         gateway_node=${var.gateway_node} network_cidr=${data.aws_vpc.env_vpc.cidr_block} \
-        pod_cidr=${var.pod_cidr}"
+        service_cidr=${var.service_cidr}"
    EOT
   }
 

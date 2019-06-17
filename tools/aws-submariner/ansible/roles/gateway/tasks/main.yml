@@ -45,7 +45,7 @@
     --set broker.ca="{{ submariner_broker_ca }}" \
     --set submariner.clusterId="{{ cluster_name }}" \
     --set submariner.clusterCidr="{{ network_cidr }}" \
-    --set submariner.serviceCidr="{{ pod_cidr }}" \
+    --set submariner.serviceCidr="{{ service_cidr }}" \
     --set submariner.natEnabled="true"
   register: gateway_result
   changed_when: "'created' in result.stdout"

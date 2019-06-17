@@ -5,11 +5,13 @@
 - [Ansible](https://docs.ansible.com/ansible/latest/installation_guide/intro_installation.html)
 - [Terraform](https://learn.hashicorp.com/terraform/getting-started/install.html)
 - Create [AWS Key](https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/ec2-key-pairs.html), copy the key to your ~/.ssh
-  folder and modify the key name. Please not that the key name is AWS key name and not local file name.
+  folder and modify the key name. You can also use the **libra** key provided for openshift-dev account.
+  Copy **libra.pem** key to your ~/.ssh folder.
 
 ```hcl
 locals {
-  key_name = "key-name"
+  aws_key_name   = "libra"
+  local_key_name = "libra.pem"
 }
 ```
 
@@ -19,6 +21,14 @@ locals {
 ```hcl
 locals {
   allowed_ips = ["1.2.3.4/32"]
+}
+```
+
+- Adjust the **redhat_id** to you Kerberos id.
+
+```hcl
+locals {
+  redhat_id = "dgroisma"
 }
 ```
 
@@ -53,14 +63,16 @@ Modify the region.
 
 ```hcl
 provider "aws" {
-  region = "eu-west-1"
+  region = "us-east-1"
 }
 ```
 
 If region was changed, please modify the [availability zones](https://gist.github.com/neilstuartcraig/0ccefcf0887f29b7f240).
 
 ```hcl
-subnet_az_list = ["eu-west-1a", "eu-west-1b", "eu-west-1c"]
+locals {
+  availability_zones = ["us-east-1a", "us-east-1b", "us-east-1c"]
+}
 ```
 
 ### Run the installation
@@ -79,6 +91,14 @@ AWS_ACCESS_KEY_ID=xxx AWS_SECRET_ACCESS_KEY=xxx terraform init
 AWS_ACCESS_KEY_ID=xxx AWS_SECRET_ACCESS_KEY=xxx terraform apply --auto-approve
 ```
 
+### Use exported kube configs.
+
+The kube configs for the clusters can will reside inside **ansible/tmp/** folder. Export the configs:
+
+```bash
+export KUBECONFIG=$(echo $(git rev-parse --show-toplevel)/tools/aws-submariner/ansible/tmp/cluster{1..3}-conf | sed 's/ /:/g')
+```
+
 ### Remove the cloud resources.
 
 ```bash
@@ -92,3 +112,5 @@ You can pass the AWS credentials on runtime. Configuring AWS credentials is not 
 cd skynet-tools/tools/aws-submariner
 AWS_ACCESS_KEY_ID=xxx AWS_SECRET_ACCESS_KEY=xxx terraform destroy --auto-approve
 ```
+
+**NOTE**: **PLEASE DO NOT FORGET TO DELETE YOUR RESOURCES AFTER YOU FINISHED!**
