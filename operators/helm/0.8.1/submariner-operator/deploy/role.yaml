@@ -24,6 +24,12 @@ rules:
   verbs:
   - '*'
 - apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - roles
+  verbs:
+  - '*'
+- apiGroups:
   - apps
   resources:
   - daemonsets
@@ -37,14 +43,14 @@ rules:
   verbs:
   - '*'
 - apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
-  - roles
-  verbs:
-  - '*'
-- apiGroups:
   - charts.helm.k8s.io
   resources:
   - '*'
   verbs:
   - '*'
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get

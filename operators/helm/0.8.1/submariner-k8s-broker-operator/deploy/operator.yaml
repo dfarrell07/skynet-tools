@@ -16,7 +16,7 @@ spec:
       containers:
         - name: submariner-k8s-broker-operator
           # Replace this with the built image name
-          image: dfarrell07/submariner-broker-operator:test
+          image: dfarrell07/submariner-broker-helm-operator:test
           imagePullPolicy: Always
           env:
             - name: WATCH_NAMESPACE

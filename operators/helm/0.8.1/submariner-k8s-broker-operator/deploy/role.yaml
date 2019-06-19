@@ -24,15 +24,15 @@ rules:
   verbs:
   - '*'
 - apiGroups:
-  - rbac.authorization.k8s.io
-  resources:
-  - roles
-  verbs:
-  - '*'
-- apiGroups:
   - ""
   resources:
   - serviceaccounts
+  verbs:
+  - '*'
+- apiGroups:
+  - rbac.authorization.k8s.io
+  resources:
+  - roles
   verbs:
   - '*'
 - apiGroups:
