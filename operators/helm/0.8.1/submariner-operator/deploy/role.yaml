@@ -13,6 +13,12 @@ rules:
 - apiGroups:
   - ""
   resources:
+  - pods
+  verbs:
+  - get
+- apiGroups:
+  - ""
+  resources:
   - configmaps
   - secrets
   verbs:
@@ -48,9 +54,3 @@ rules:
   - '*'
   verbs:
   - '*'
-- apiGroups:
-  - ""
-  resources:
-  - pods
-  verbs:
-  - get
