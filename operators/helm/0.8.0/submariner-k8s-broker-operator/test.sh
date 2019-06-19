@@ -9,17 +9,17 @@ set -ex -o pipefail
 # TODO: Move this to Kind e2e tests, build on that 3-cluster deploy logic
 
 # Cleanup any existing cluster
-minikube delete
+#minikube delete
 
 if ! minikube status | grep Running; then
   # Start cluster
-  minikube start
+  #minikube start
+  echo bar
 fi
 
 # Build/push/update SubM Broker Operator image
-operator-sdk build docker.io/dfarrell07/submariner-broker-helm-operator:test
-docker push docker.io/dfarrell07/submariner-broker-helm-operator:test
-
+#operator-sdk build docker.io/dfarrell07/submariner-broker-helm-operator:test
+#docker push docker.io/dfarrell07/submariner-broker-helm-operator:test
 
 # Create SubM Broker CRD
 if ! kubectl get crds | grep submarinerk8sbrokers.charts.helm.k8s.io; then

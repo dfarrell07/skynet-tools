@@ -1,0 +1,15 @@
+apiVersion: charts.helm.k8s.io/v1alpha1
+kind: SubmarinerK8SBroker
+metadata:
+  name: example-submarinerk8sbroker
+spec:
+  # Default values copied from <project_dir>/helm-charts/submariner-k8s-broker/values.yaml
+  
+  rbac:
+    create: true
+  crd:
+    create: true
+  serviceAccounts:
+    client:
+      create: true
+      name: ""

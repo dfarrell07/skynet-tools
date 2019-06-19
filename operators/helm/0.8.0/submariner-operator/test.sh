@@ -76,11 +76,20 @@ while ! kubectl get crds | grep clusters.submariner.io; do sleep 2; done
 while ! kubectl get crds | grep endpoints.submariner.io; do sleep 2; done
 
 # Additional commands to inspect the functions of the Operator pod
-subm_operator_pod_name=$(kubectl get pods -l name=submariner-operator -o=jsonpath='{.items..metadata.name}')
-kubectl exec -it $subm_operator_pod_name -- cat /usr/local/bin/entrypoint
-kubectl exec -it $subm_operator_pod_name -- ls -lh /usr/local/bin/helm-operator
-kubectl exec -it $subm_operator_pod_name -- cat /opt/helm/watches.yaml
-kubectl exec -it $subm_operator_pod_name -- ls -lhR /opt/helm/helm-charts/submariner
+#subm_operator_pod_name=$(kubectl get pods -l name=submariner-operator -o=jsonpath='{.items..metadata.name}')
+#kubectl exec -it $subm_operator_pod_name -- cat /usr/local/bin/entrypoint
+#kubectl exec -it $subm_operator_pod_name -- ls -lh /usr/local/bin/helm-operator
+#kubectl exec -it $subm_operator_pod_name -- cat /opt/helm/watches.yaml
+#kubectl exec -it $subm_operator_pod_name -- ls -lhR /opt/helm/helm-charts/submariner
 # TODO: Make this non-interactive if going to test
 # Note the expected-errors about CRDs already existing
 #kubectl exec -it $subm_operator_pod_name -- /usr/local/bin/helm-operator run helm --watches-file=/opt/helm/watches.yaml
+
+# TODO: Create/remove/edit watches resources and verify Operator responds correctly
+
+# Create OLM manifest for SubM Operator
+# This is already gen'd, and maintainer, provider, keywords manually added
+#operator-sdk olm-catalog gen-csv --csv-version 0.0.1
+
+# Set gateway label required by SubM
+#kubectl label node cluster2-worker "submariner.io/gateway=true" --overwrite
