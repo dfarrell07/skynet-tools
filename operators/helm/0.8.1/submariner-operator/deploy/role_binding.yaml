@@ -6,7 +6,7 @@ subjects:
 - kind: ServiceAccount
   name: submariner-operator
   # Replace this with the namespace the operator is deployed in.
-  namespace: submariner
+  namespace: default
 roleRef:
   kind: ClusterRole
   name: submariner-operator
