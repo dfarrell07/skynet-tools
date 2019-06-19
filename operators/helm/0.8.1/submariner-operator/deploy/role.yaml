@@ -24,6 +24,13 @@ rules:
   verbs:
   - '*'
 - apiGroups:
+  - apps
+  resources:
+  - daemonsets
+  - deployments
+  verbs:
+  - '*'
+- apiGroups:
   - ""
   resources:
   - serviceaccounts
@@ -33,13 +40,6 @@ rules:
   - rbac.authorization.k8s.io
   resources:
   - roles
-  verbs:
-  - '*'
-- apiGroups:
-  - apps
-  resources:
-  - daemonsets
-  - deployments
   verbs:
   - '*'
 - apiGroups:
