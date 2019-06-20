@@ -41,3 +41,9 @@ rules:
   - '*'
   verbs:
   - '*'
+- apiGroups:
+  - ""
+  resources:
+  - pods
+  verbs:
+  - get
