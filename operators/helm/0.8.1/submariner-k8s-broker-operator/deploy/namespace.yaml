@@ -1,0 +1,10 @@
+{
+  "apiVersion": "v1",
+  "kind": "Namespace",
+  "metadata": {
+    "name": "submariner-k8s-broker",
+    "labels": {
+      "name": "submariner-k8s-broker"
+    }
+  }
+}
