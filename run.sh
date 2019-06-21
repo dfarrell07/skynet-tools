@@ -241,7 +241,6 @@ OPT_SSH_KEY=$(cat $DIR/ansible/inventory/.ssh_key_name 2>/dev/null)
 OPT_POD_CIDR=10.128.0.0/14
 OPT_SERVICE_CIDR=172.30.0.0/16
 OPT_PRIVATE_SSH_KEY=$HOME/.ssh/id_rsa
-OPT_CLUSTER_CIDR=10.0.0.0/24
 
 while [ "x$1" != "x" ]; do
     case "$1" in
@@ -318,11 +317,6 @@ while [ "x$1" != "x" ]; do
 
         --service-cidr|-X)
             OPT_SERVICE_CIDR=$2
-            shift
-            ;;
-
-        --cluster-cidr|-C)
-            OPT_CLUSTER_CIDR=$2
             shift
             ;;
 
@@ -457,7 +451,6 @@ deploy_openshift_cluster() {
                          -e ssh_key_name=$OPT_SSH_KEY \
                          -e ssh_private_key=$OPT_SSH_PRIVATE_KEY \
                          -e cluster_name=$OPT_NAME \
-                         -e cluster_cidr=$OPT_CLUSTER_CIDR \
                          ${OPT_SKIP_TAGS[@]} \
                          $DIR/ansible/os-cluster-4.yml \
                          -i $DIR/ansible/inventory \
@@ -477,7 +470,6 @@ deploy_openshift_cluster() {
                          -e ssh_key_name=$OPT_SSH_KEY \
                          -e ssh_private_key=$OPT_SSH_PRIVATE_KEY \
                          -e cluster_name=$OPT_NAME \
-                         -e cluster_cidr=$OPT_CLUSTER_CIDR \
                          -e pod_cidr=$OPT_POD_CIDR \
                          -e service_cidr=$OPT_SERVICE_CIDR \
                          -i $DIR/ansible/inventory \

@@ -76,13 +76,13 @@ $ vim ansible/clouds.yml
 ## Deploying a 3.11 openshift cluster
 
 ```bash
-./run.sh deploy openshift-cluster -v 3.11 -n c0 -k mbp-ajo --cluster-cidr 192.168.0.0/24
+./run.sh deploy openshift-cluster -v 3.11 -n c0 -k mbp-ajo
 ```
 
 ## Deploying a second 3.11 openshift cluster
 
 ```bash
-./run.sh deploy openshift-cluster -v 3.11 -n c1 --pod-cidr 10.132.0.0/14 --service-cidr 172.31.0.0/16 --cluster-cidr 192.168.0.0/24
+./run.sh deploy openshift-cluster -v 3.11 -n c1 --pod-cidr 10.132.0.0/14 --service-cidr 172.31.0.0/16
 ```
 
 ## Deploying a 4.00 openshift cluster
@@ -158,9 +158,6 @@ Options:
 
   -X, --service-cidr <cidr> (default is 172.30.0.0/16, avoid 172.17.0.0/16 docker0 range)
                    This is the desidred Service CIDR for the cluster
-
-  -C, --cluster-cidr <cidr> (default is 10.0.0.0/24)
-                   This is the desired cluster CIDR
 
 Common options:
 

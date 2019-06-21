@@ -28,9 +28,6 @@
     create_inventory:
       template: openshift-ansible-3.11-inventory.j2
       dest: "inventory/{{ cluster_name }}-openshift-3.11-inventory"
-    networks:
-      "{{ cluster_name }}":
-        cidr: "{{ cluster_cidr }}"
 
 - name: Prepare hosts of cluster for openshift-ansible
   hosts: "{{ cluster_name }}"
