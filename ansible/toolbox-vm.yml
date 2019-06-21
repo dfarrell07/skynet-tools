@@ -8,7 +8,7 @@
     vms:
       toolbox:
         name: "toolbox"
-        flavor: 'm1.medium'
+        flavor: 'm1.large'
         net: 'private_k8s_net'
         groups: ['toolbox']
         security_groups: ['ssh_icmp', 'kind_ports']

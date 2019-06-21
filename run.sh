@@ -23,6 +23,7 @@ Usage: $0 <action> ...
   $0 deploy   <deployment-type> ...  Deploy on the specified cloud.
   $0 destroy  <deployment-type> ...  Destroy the specified deployment
   $0 tunnel   <deployment-type> ...  Create ssh tunnels to reach the remote API
+  $0 ssh      <deployment-type> ...  SSH to the main VM of a deployment
   $0 ping                            Ping all instances on inventory
 
 Deployment types:
@@ -211,6 +212,10 @@ case "$ACTION" in
            fi
            shift
            ;;
+   ssh) DEPLOYMENT_TYPE=$1
+        check_deployment_type
+        shift
+        ;;
    ping) PING_GROUP=$1;
          shift
          ;;
@@ -561,9 +566,9 @@ find_redirect_ports() {
     grep -h -E -o localhost:[0-9]+  creds/kind-config-cluster* | grep -E -o [0-9]+
 }
 
-find_toolbox_ip() {
-    grep -h -E -o ansible_ssh_host=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+  ansible/inventory/toolbox-inventory \
-        | grep -E -o [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+
+find_ip() {
+    grep -h -E -o ansible_ssh_host=[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ $1 \
+        | grep -E -o [0-9]+\.[0-9]+\.[0-9]+\.[0-9]+ | head -n 1
 }
 
 get_abs_filename() {
@@ -578,7 +583,7 @@ tunnel_toolbox_kind() {
         exit 1
     fi
 
-    TOOLBOX_IP="$(find_toolbox_ip)"
+    TOOLBOX_IP="$(find_ip ansible/inventory/toolbox-inventory)"
     if [[ "x$TOOLBOX_IP" == "x" ]]; then
         echo "Couldn't find the IP address from the toolbox-inventory" >&2
         exit 1
@@ -617,28 +622,50 @@ tunnel_toolbox_kind() {
     kubectl config get-contexts
 }
 
+
+ssh_toolbox() {
+    TOOLBOX_IP="$(find_ip ansible/inventory/toolbox-inventory)"
+    if [[ "x$TOOLBOX_IP" == "x" ]]; then
+        echo "Couldn't find the IP address from the toolbox-inventory" >&2
+        exit 1
+    fi
+    SSH_OPTS="-A -o UserKnownHostsFile=/dev/null -o StrictHostKeyChecking=no"
+    ssh centos@$TOOLBOX_IP $SSH_OPTS
+
+}
+
+ssh_toolbox_kind() {
+    ssh_toolbox
+}
+
+
 ############################################
 #    Actions                               #
 ############################################
 
-deploy() {
+_deploy() {
     deploy_${DEPLOYMENT_TYPE/-/_}
 }
 
-destroy() {
+_destroy() {
     destroy_${DEPLOYMENT_TYPE/-/_}
 }
 
-ping() {
+_ping() {
     ansible -m ping -i ansible/inventory/ ${PING_GROUP:-all}
 }
 
-tunnel() {
+_tunnel() {
     tunnel_${DEPLOYMENT_TYPE/-/_}
 }
+
+_ssh() {
+    ssh_${DEPLOYMENT_TYPE/-/_}
+}
+
 
 ############################################
 #   Call the specific deployment action    #
 ############################################
 
-${ACTION/-/_}
+_${ACTION/-/_}
