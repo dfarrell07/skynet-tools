@@ -1,0 +1,30 @@
+---
+- name: Install docker
+  yum: name=docker state=present
+  become: yes
+
+- name: Enable docker service
+  service: name=docker state=started enabled=yes
+  become: yes
+
+- name: Install kubectl
+  shell: |
+    cd /usr/local/bin
+    curl -LO https://storage.googleapis.com/kubernetes-release/release/$(curl -s https://storage.googleapis.com/kubernetes-release/release/stable.txt)/bin/linux/amd64/kubectl
+    chmod a+x kubectl
+  become: yes
+
+- name: Install kubefed tool
+  shell: |
+    cd /tmp
+    KUBEFED_VERSION=0.1.0-rc2
+    ARCH=amd64
+    curl -LO "https://github.com/kubernetes-sigs/kubefed/releases/download/v${KUBEFED_VERSION}/kubefedctl-${KUBEFED_VERSION}-linux-${ARCH}.tgz"
+    tar -xzf kubefedctl-${KUBEFED_VERSION}-linux-${ARCH}.tgz
+    cp kubefedctl /usr/bin/
+    chmod a+x /usr/bin/kubefedctl
+  become: yes
+
+- name: Disable selinux which won't work for kind
+  selinux: state=disabled
+  become: yes
