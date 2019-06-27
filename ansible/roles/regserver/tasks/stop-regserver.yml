@@ -1,0 +1,6 @@
+---
+- name: Stop and remove registry server
+  shell: docker stop registry && docker rm registry
+  become: yes
+  ignore_errors: yes
+

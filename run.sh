@@ -32,6 +32,9 @@ Deployment types:
 
   toolbox-kind      Used to deploy 3 kind clusters + submariners in the toolbox VM
 
+  regserver         Used to deploy private docker registry server in the toolbox VM
+                    This requires toolbox to already be deployed.
+
   openshift-cluster Used to manage a single cluster
 
   rdo-networks      Used to cleanup or create default working RDO networks and
@@ -176,6 +179,8 @@ check_deployment_type() {
                         ;;
     toolbox-kind)   OPT_CLOUD=RDO
                         ;;
+    regserver)         OPT_CLOUD=RDO
+                        ;;
     *) echo "ERROR: deployment type $DEPLOYMENT_TYPE unknown" >&2
                 usage >&2
                 exit 2
@@ -241,6 +246,9 @@ OPT_SSH_KEY=$(cat $DIR/ansible/inventory/.ssh_key_name 2>/dev/null)
 OPT_POD_CIDR=10.128.0.0/14
 OPT_SERVICE_CIDR=172.30.0.0/16
 OPT_PRIVATE_SSH_KEY=$HOME/.ssh/id_rsa
+OPT_REGSERVER_NAME=myregistry.io
+OPT_REGSERVER_USER=testuser
+OPT_REGSERVER_PASSWD=testpassword
 
 while [ "x$1" != "x" ]; do
     case "$1" in
@@ -399,6 +407,7 @@ deploy_toolbox() {
                          ${OPT_VARS[@]} \
                          -e manager_host=$OPT_MANAGER_HOST \
                          -e ssh_key_name=$OPT_SSH_KEY \
+                         -e ssh_private_key=$OPT_SSH_PRIVATE_KEY \
                          ${OPT_SKIP_TAGS[@]} \
                          $DIR/ansible/toolbox-vm.yml \
                          -i $DIR/ansible/inventory \
@@ -411,6 +420,7 @@ deploy_toolbox() {
                          ${OPT_VARS[@]} \
                          -e manager_host=$OPT_MANAGER_HOST \
                          -e ssh_key_name=$OPT_SSH_KEY \
+                         -e ssh_private_key=$OPT_SSH_PRIVATE_KEY \
                          ${OPT_SKIP_TAGS[@]} \
                          $DIR/ansible/toolbox.yml \
                          -i $DIR/ansible/inventory \
@@ -435,6 +445,40 @@ destroy_toolbox() {
 
 }
 
+deploy_regserver() {
+    echo "WARNING: toolbox VM must be created first"
+    verify_ssh_key
+    ansible-playbook $ANSIBLE_VERBOSITY \
+                         ${OPT_ENVIRONMENT[@]} \
+                         ${OPT_VARS[@]} \
+                         -e manager_host=$OPT_MANAGER_HOST \
+                         -e ssh_key_name=$OPT_SSH_KEY \
+                         -e ssh_private_key=$OPT_SSH_PRIVATE_KEY \
+                         -e regserver_name=$OPT_REGSERVER_NAME \
+                         -e regserver_user=$OPT_REGSERVER_USER \
+                         -e regserver_passwd=$OPT_REGSERVER_PASSWD \
+                         ${OPT_SKIP_TAGS[@]} \
+                         $DIR/ansible/regserver.yml \
+                         -i $DIR/ansible/inventory \
+                         -t regserver \
+                         ${OPT_SKIP_TAGS[@]}
+
+}
+
+destroy_regserver() {
+    echo "WARNING: This only removes registry service, not toolbox VM"
+    verify_destroy regserver
+    ansible-playbook $ANSIBLE_VERBOSITY \
+                         ${OPT_ENVIRONMENT[@]} \
+                         ${OPT_VARS[@]} \
+                         -e manager_host=$OPT_MANAGER_HOST \
+                         -e ssh_key_name=$OPT_SSH_KEY \
+                         ${OPT_SKIP_TAGS[@]} \
+                         $DIR/ansible/regserver.yml \
+                         -i $DIR/ansible/inventory \
+                         -t stop-regserver \
+                         ${OPT_SKIP_TAGS[@]}
+}
 deploy_openshift_cluster() {
 
     verify_ssh_key

@@ -1,0 +1,7 @@
+---
+- import_tasks: install-basics.yml
+  tags: [regserver]
+- import_tasks: install-regserver.yml
+  tags: [regserver]
+- import_tasks: stop-regserver.yml
+  tags: [stop-regserver]

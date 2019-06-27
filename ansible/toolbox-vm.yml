@@ -11,7 +11,7 @@
         flavor: 'm1.large'
         net: 'private_k8s_net'
         groups: ['toolbox']
-        security_groups: ['ssh_icmp', 'kind_ports']
+        security_groups: ['ssh_icmp', 'kind_ports', 'regserver']
     create_inventory:
       template: toolbox-inventory.j2
       dest: "inventory/toolbox-inventory"
