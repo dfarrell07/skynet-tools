@@ -30,3 +30,10 @@
     name: [git, vim, tree, tmux]
   become: yes
 
+- name: Install github hub tool
+  shell: |
+     cd /tmp
+     curl -L https://github.com/github/hub/releases/download/v2.12.0/hub-linux-amd64-2.12.0.tgz | tar xfz -
+     cd hub-linux-amd64-2.12.0
+     ./install
+  become: yes
