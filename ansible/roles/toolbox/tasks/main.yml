@@ -1,3 +1,6 @@
 ---
 - import_tasks: install-basics.yml
   tags: [toolbox]
+
+- import_tasks: install-k8s-tools.yml
+  tags: [toolbox]
