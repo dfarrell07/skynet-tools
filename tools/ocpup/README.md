@@ -100,7 +100,7 @@ Important config variables:
 ## Create clusters:
 
 ```bash
-ocp create clusters
+ocpup create clusters
 ```
 
 The tool will create **.config** directory with the openshift install assets for each cluster.
