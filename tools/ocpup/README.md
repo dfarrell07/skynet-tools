@@ -4,8 +4,9 @@ This tool creates 3 OCP4 clusters on AWS and connects them with submariner.
 
 ## Prerequisites
 
-- [go 1.12]
+- [go 1.12] with [$GOPATH configured]
 - [awscli]
+- [Route53 public hosted zone]
 - openshift-dev AWS account access or any other AWS account with near admin privileges.
 
 ## Build the tool
@@ -15,7 +16,7 @@ go mod vendor
 go install -mod vendor
 ```
 
-The ocpup binary will be placed under **$GOPATH/bin/** directory.
+The **ocpup** binary will be placed under **$GOPATH/bin/** directory.
 
 ## Configure awscli 
 
@@ -30,7 +31,7 @@ If the config is placed in other directory, pass the config file location to **o
 ocpup create cluster --config /path/to/ocpup.yaml
 ``` 
 
-Config a file template:
+Config file template:
 
 ```yaml
 openshift:
@@ -92,10 +93,12 @@ authentication:
 Important config variables:
 
 | Variable Name | Description                                                                                                              |
-|:------------- |:---------                                                                                                                |
+|:------------- |:-------------------------------------------------------------------------------------------------------------------------|
 | dnsDomain     | AWS Route53 hosted zone domain name that you own. If not using openshif-dev account, please create a public hosted zone. | 
 | pullSecret    | Security credentials from [Red Hat portal], please put this credentials in single quotes ''.                             | 
 | sshKey        | SSH pub key from your workstation. Must have the corresponding private key.                                              |
+
+Any region is supported as long as it has at least 3 availability zones a,b and c.
 
 ## Create clusters:
 
@@ -125,6 +128,7 @@ ocpup destroy clusters
 
 The deletion process takes up to 45 minutes, please be patient.
 
+**Please remove your resources after you complete the testing.**
 
 ## VERY IMPORTANT
 
@@ -135,3 +139,5 @@ The deletion process takes up to 45 minutes, please be patient.
 [awscli]: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-install.html
 [Configure your AWS credentials]: https://docs.aws.amazon.com/cli/latest/userguide/cli-chap-configure.html
 [Red Hat portal]: https://cloud.redhat.com/openshift/install/aws/installer-provisioned
+[Route53 public hosted zone]: https://docs.aws.amazon.com/Route53/latest/DeveloperGuide/AboutHZWorkingWith.html
+[$GOPATH configured]: https://github.com/golang/go/wiki/SettingGOPATH
