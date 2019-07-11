@@ -455,9 +455,10 @@ func AddSubmarinerSecurityContext(wg *sync.WaitGroup, cl ClusterData) {
 func LabelGatewayNodes(wg *sync.WaitGroup, cl ClusterData) {
 	infraData := ExtractInfraDetails(cl)
 
-	sess, err := session.NewSession(&aws.Config{
-		Region: aws.String(cl.Region)},
-	)
+	sess, err := session.NewSession(&aws.Config{Region: aws.String(cl.Region)})
+	if err != nil {
+		log.Fatal(err)
+	}
 
 	ec2svc := ec2.New(sess)
 
