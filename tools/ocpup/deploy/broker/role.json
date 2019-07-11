@@ -1,0 +1,31 @@
+{
+  "apiVersion": "rbac.authorization.k8s.io/v1",
+  "kind": "Role",
+  "metadata": {
+    "name": "submariner-k8s-broker:client",
+    "namespace": "submariner-k8s-broker",
+    "labels": {
+      "app": "submariner-k8s-broker"
+    }
+  },
+  "rules": [
+    {
+      "apiGroups": [
+        "submariner.io"
+      ],
+      "resources": [
+        "clusters",
+        "endpoints"
+      ],
+      "verbs": [
+        "create",
+        "get",
+        "list",
+        "watch",
+        "patch",
+        "update",
+        "delete"
+      ]
+    }
+  ]
+}

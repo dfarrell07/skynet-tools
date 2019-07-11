@@ -1,0 +1,102 @@
+{
+  "apiVersion": "apps/v1",
+  "kind": "Deployment",
+  "metadata": {
+    "labels": {
+      "app": "helm",
+      "name": "tiller"
+    },
+    "name": "tiller-deploy"
+  },
+  "spec": {
+    "progressDeadlineSeconds": 2147483647,
+    "replicas": 1,
+    "revisionHistoryLimit": 2147483647,
+    "selector": {
+      "matchLabels": {
+        "app": "helm",
+        "name": "tiller"
+      }
+    },
+    "strategy": {
+      "rollingUpdate": {
+        "maxSurge": 1,
+        "maxUnavailable": 1
+      },
+      "type": "RollingUpdate"
+    },
+    "template": {
+      "metadata": {
+        "labels": {
+          "app": "helm",
+          "name": "tiller"
+        }
+      },
+      "spec": {
+        "automountServiceAccountToken": true,
+        "containers": [
+          {
+            "env": [
+              {
+                "name": "TILLER_NAMESPACE",
+                "value": "kube-system"
+              },
+              {
+                "name": "TILLER_HISTORY_MAX",
+                "value": "0"
+              }
+            ],
+            "image": "gcr.io/kubernetes-helm/tiller:v2.14.1",
+            "imagePullPolicy": "IfNotPresent",
+            "livenessProbe": {
+              "failureThreshold": 3,
+              "httpGet": {
+                "path": "/liveness",
+                "port": 44135,
+                "scheme": "HTTP"
+              },
+              "initialDelaySeconds": 1,
+              "periodSeconds": 10,
+              "successThreshold": 1,
+              "timeoutSeconds": 1
+            },
+            "name": "tiller",
+            "ports": [
+              {
+                "containerPort": 44134,
+                "name": "tiller",
+                "protocol": "TCP"
+              },
+              {
+                "containerPort": 44135,
+                "name": "http",
+                "protocol": "TCP"
+              }
+            ],
+            "readinessProbe": {
+              "failureThreshold": 3,
+              "httpGet": {
+                "path": "/readiness",
+                "port": 44135,
+                "scheme": "HTTP"
+              },
+              "initialDelaySeconds": 1,
+              "periodSeconds": 10,
+              "successThreshold": 1,
+              "timeoutSeconds": 1
+            },
+            "resources": {},
+            "terminationMessagePath": "/dev/termination-log",
+            "terminationMessagePolicy": "File"
+          }
+        ],
+        "dnsPolicy": "ClusterFirst",
+        "restartPolicy": "Always",
+        "schedulerName": "default-scheduler",
+        "securityContext": {},
+        "serviceAccountName": "tiller",
+        "terminationGracePeriodSeconds": 30
+      }
+    }
+  }
+}

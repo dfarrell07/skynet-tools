@@ -1,0 +1,31 @@
+apiVersion: v1
+baseDomain: {{.DNSDomain}}
+compute:
+  - hyperthreading: Enabled
+    name: worker
+    platform: {}
+    replicas: 0
+controlPlane:
+  hyperthreading: Enabled
+  name: master
+  platform: {}
+  replicas: 1
+metadata:
+  creationTimestamp: null
+  name: {{(.ClusterName)}}
+networking:
+  clusterNetwork:
+    - cidr: {{.PodCidr}}
+      hostPrefix: 23
+  machineCIDR: {{.VpcCidr}}
+  networkType: OpenShiftSDN
+  serviceNetwork:
+    - {{ .SvcCidr }}
+platform:
+  {{- if (eq .Platform "aws")}}
+  aws:
+    region: {{.Region}}
+  {{- end}}
+pullSecret: '{{.PullSecret}}'
+sshKey: |
+  {{.SSHKey}}
