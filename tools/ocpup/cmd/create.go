@@ -42,6 +42,35 @@ import (
 	"time"
 )
 
+type KubeConfig struct {
+	APIVersion string `yaml:"apiVersion"`
+	Clusters   []struct {
+		Cluster struct {
+			CertificateAuthorityData string `yaml:"certificate-authority-data"`
+			Server                   string `yaml:"server"`
+		} `yaml:"cluster"`
+		Name string `yaml:"name"`
+	} `yaml:"clusters"`
+	Contexts []struct {
+		Context struct {
+			Cluster string `yaml:"cluster"`
+			User    string `yaml:"user"`
+		} `yaml:"context"`
+		Name string `yaml:"name"`
+	} `yaml:"contexts"`
+	CurrentContext string `yaml:"current-context"`
+	Kind           string `yaml:"kind"`
+	Preferences    struct {
+	} `yaml:"preferences"`
+	Users []struct {
+		Name string `yaml:"name"`
+		User struct {
+			ClientCertificateData string `yaml:"client-certificate-data"`
+			ClientKeyData         string `yaml:"client-key-data"`
+		} `yaml:"user"`
+	} `yaml:"users"`
+}
+
 type ClusterData struct {
 	ClusterName string `yaml:"clusterName"`
 	Platform    string `yaml:"platform"`
@@ -418,12 +447,12 @@ func AddSubmarinerSecurityContext(wg *sync.WaitGroup, cl ClusterData) {
 	}
 
 	log.Infof("Security context updated for %s.", cl.ClusterName)
+	wg.Done()
 
 }
 
 //Label gateway nodes as submariner gateway
 func LabelGatewayNodes(wg *sync.WaitGroup, cl ClusterData) {
-
 	infraData := ExtractInfraDetails(cl)
 
 	sess, err := session.NewSession(&aws.Config{
@@ -470,6 +499,7 @@ func LabelGatewayNodes(wg *sync.WaitGroup, cl ClusterData) {
 			},
 		},
 	}
+
 	ec2Result, err := ec2svc.DescribeInstances(ec2Input)
 	if err != nil {
 		if aerr, ok := err.(awserr.Error); ok {
@@ -649,7 +679,7 @@ func WaitForTillerDeployment(cls []ClusterData) {
 					}
 				}
 			}
-		}, 2*time.Second, tillerContext.Done())
+		}, 10*time.Second, tillerContext.Done())
 		err = tillerContext.Err()
 		if err != nil && err != context.Canceled {
 			log.Fatalf("Error waiting for tiller deployment %s %s", cl.ClusterName, err)
@@ -821,39 +851,9 @@ func CreateTillerClusterRoleBinding(cls []ClusterData) {
 
 //Copy existing kubeconfig files with required changes
 func ModifyKubeConfigFiles(cls []ClusterData) {
-
-	type kubeConfig struct {
-		APIVersion string `yaml:"apiVersion"`
-		Clusters   []struct {
-			Cluster struct {
-				CertificateAuthorityData string `yaml:"certificate-authority-data"`
-				Server                   string `yaml:"server"`
-			} `yaml:"cluster"`
-			Name string `yaml:"name"`
-		} `yaml:"clusters"`
-		Contexts []struct {
-			Context struct {
-				Cluster string `yaml:"cluster"`
-				User    string `yaml:"user"`
-			} `yaml:"context"`
-			Name string `yaml:"name"`
-		} `yaml:"contexts"`
-		CurrentContext string `yaml:"current-context"`
-		Kind           string `yaml:"kind"`
-		Preferences    struct {
-		} `yaml:"preferences"`
-		Users []struct {
-			Name string `yaml:"name"`
-			User struct {
-				ClientCertificateData string `yaml:"client-certificate-data"`
-				ClientKeyData         string `yaml:"client-key-data"`
-			} `yaml:"user"`
-		} `yaml:"users"`
-	}
-
 	log.Info("Modifying kubeconfig files.")
 
-	var kubeconf kubeConfig
+	var kubeconf KubeConfig
 
 	for _, cl := range cls {
 		currentDir, _ := os.Getwd()
