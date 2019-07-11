@@ -347,7 +347,7 @@ func GetDependencies(v OpenshiftData) {
 	_ = os.RemoveAll(filepath.Join(currentDir, "tmp"))
 }
 
-//Get openshift install amd client binaries
+//Get openshift install and client binaries
 func GetOcpTools(version string) {
 	url := "https://mirror.openshift.com/pub/openshift-v4/clients/ocp" + "/" + version + "/openshift-install-linux-" + version + ".tar.gz"
 	err := DownloadFile(url, "./tmp/openshift-install-linux-"+version+".tar.gz", "openshift-install")
