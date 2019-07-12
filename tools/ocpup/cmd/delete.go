@@ -47,7 +47,7 @@ func DeleteCluster(wg *sync.WaitGroup, cl ClusterData) {
 	log.WithFields(log.Fields{
 		"cluster": cl.ClusterName,
 	}).Debugf("%s %s", cl.ClusterName, buf.String())
-	log.Infof("Resources for %s were removed.", cl.ClusterName)
+	log.Infof("✔ Resources for %s were removed.", cl.ClusterName)
 	wg.Done()
 }
 
