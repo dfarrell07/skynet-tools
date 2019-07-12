@@ -132,7 +132,7 @@ func (wc *WriteCounter) Write(p []byte) (int, error) {
 func (wc WriteCounter) PrintProgress() {
 	// Clear the line by using a character return to go back to the start and remove
 	// the remaining characters by filling it with spaces
-	fmt.Printf("\r%s", strings.Repeat(" ", 35))
+	fmt.Printf("\r%s", strings.Repeat(" ", 180))
 
 	// Return again and print current status of download
 	// We use the humanize package to print the bytes in a meaningful way (e.g. 10 MB)
@@ -406,7 +406,7 @@ func InstallSubmarinerBroker(cl ClusterData, ns string) {
 	log.WithFields(log.Fields{
 		"cluster": cl.ClusterName,
 	}).Debugf("%s %s", cl.ClusterName, buf.String())
-	log.Infof("Broker was installed on %s.", cl.ClusterName)
+	log.Infof("✔ Broker was installed on %s.", cl.ClusterName)
 }
 
 //Add submariner security policy to gateway node
@@ -446,7 +446,7 @@ func AddSubmarinerSecurityContext(wg *sync.WaitGroup, cl ClusterData) {
 		log.Fatal(err)
 	}
 
-	log.Infof("Security context updated for %s.", cl.ClusterName)
+	log.Infof("✔ Security context updated for %s.", cl.ClusterName)
 	wg.Done()
 
 }
@@ -537,7 +537,7 @@ func LabelGatewayNodes(wg *sync.WaitGroup, cl ClusterData) {
 		if err != nil {
 			panic(err)
 		}
-		log.Infof("Node %s labeled %s", node.Name, cl.ClusterName)
+		log.Infof("✔ Node %s labeled %s", node.Name, cl.ClusterName)
 		wg.Done()
 	}
 }
@@ -608,7 +608,7 @@ func InstallSubmarinerGateway(wg *sync.WaitGroup, cl ClusterData, broker Cluster
 	log.WithFields(log.Fields{
 		"cluster": cl.ClusterName,
 	}).Debugf("%s %s", cl.ClusterName, buf.String())
-	log.Infof("Gateway was installed on %s.", cl.ClusterName)
+	log.Infof("✔ Gateway was installed on %s.", cl.ClusterName)
 	wg.Done()
 }
 
@@ -651,40 +651,40 @@ func ExportBrokerSecretData(cl ClusterData) (map[string][]byte, error) {
 }
 
 //Wait for tiller deployment to be ready
-func WaitForTillerDeployment(cls []ClusterData) {
-	for _, cl := range cls {
-		ctx := context.Background()
-		currentDir, _ := os.Getwd()
-		kubeConfigFile := filepath.Join(currentDir, ".config", cl.ClusterName, "auth", "kubeconfig")
-		config, err := clientcmd.BuildConfigFromFlags("", kubeConfigFile)
-		if err != nil {
-			panic(err.Error())
-		}
+func WaitForTillerDeployment(wg *sync.WaitGroup, cl ClusterData) {
+	ctx := context.Background()
+	currentDir, _ := os.Getwd()
+	kubeConfigFile := filepath.Join(currentDir, ".config", cl.ClusterName, "auth", "kubeconfig")
+	config, err := clientcmd.BuildConfigFromFlags("", kubeConfigFile)
+	if err != nil {
+		panic(err.Error())
+	}
 
-		clientset, err := kubernetes.NewForConfig(config)
-		if err != nil {
-			panic(err.Error())
-		}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
 
-		tillerTimeout := 5 * time.Minute
-		log.Infof("Waiting up to %v for tiller to be created %s...", tillerTimeout, cl.ClusterName)
-		tillerContext, cancel := context.WithTimeout(ctx, tillerTimeout)
-		deploymentsClient := clientset.ExtensionsV1beta1().Deployments("kube-system")
-		wait.Until(func() {
-			deployments, err := deploymentsClient.List(metav1.ListOptions{LabelSelector: "app=helm, name=tiller"})
-			if err == nil && len(deployments.Items) > 0 {
-				for _, deploy := range deployments.Items {
-					if deploy.Name == "tiller-deploy" && deploy.Status.ReadyReplicas == 1 {
-						log.Infof("Tiller successfully deployed to %s, ready replicas: %v", cl.ClusterName, deploy.Status.ReadyReplicas)
-						cancel()
-					}
+	tillerTimeout := 5 * time.Minute
+	log.Infof("⌛ Waiting up to %v for tiller to be created %s...", tillerTimeout, cl.ClusterName)
+	tillerContext, cancel := context.WithTimeout(ctx, tillerTimeout)
+	deploymentsClient := clientset.ExtensionsV1beta1().Deployments("kube-system")
+	wait.Until(func() {
+		deployments, err := deploymentsClient.List(metav1.ListOptions{LabelSelector: "app=helm, name=tiller"})
+		if err == nil && len(deployments.Items) > 0 {
+			for _, deploy := range deployments.Items {
+				if deploy.Name == "tiller-deploy" && deploy.Status.ReadyReplicas == 1 {
+					log.Infof("✔ Tiller successfully deployed to %s, ready replicas: %v", cl.ClusterName, deploy.Status.ReadyReplicas)
+					cancel()
+					wg.Done()
 				}
 			}
-		}, 10*time.Second, tillerContext.Done())
-		err = tillerContext.Err()
-		if err != nil && err != context.Canceled {
-			log.Fatalf("Error waiting for tiller deployment %s %s", cl.ClusterName, err)
 		}
+	}, 10*time.Second, tillerContext.Done())
+	err = tillerContext.Err()
+	if err != nil && err != context.Canceled {
+		log.Fatalf("Error waiting for tiller deployment %s %s", cl.ClusterName, err)
+		wg.Done()
 	}
 }
 
@@ -704,7 +704,7 @@ func WaitForSubmarinerDeployment(wg *sync.WaitGroup, cl ClusterData, helm HelmDa
 	}
 
 	submarinerTimeout := 5 * time.Minute
-	log.Infof("Waiting up to %v for submariner engine to be created %s...", submarinerTimeout, cl.ClusterName)
+	log.Infof("⌛ Waiting up to %v for submariner engine to be created %s...", submarinerTimeout, cl.ClusterName)
 	submarinerContext, cancel := context.WithTimeout(ctx, submarinerTimeout)
 	deploymentsClient := clientset.ExtensionsV1beta1().Deployments(helm.Engine.Namespace)
 	wait.Until(func() {
@@ -712,7 +712,7 @@ func WaitForSubmarinerDeployment(wg *sync.WaitGroup, cl ClusterData, helm HelmDa
 		if err == nil && len(deployments.Items) > 0 {
 			for _, deploy := range deployments.Items {
 				if deploy.Status.ReadyReplicas == int32(cl.NumGateways) {
-					log.Infof("Submariner engine successfully deployed to %s, ready replicas: %v", cl.ClusterName, deploy.Status.ReadyReplicas)
+					log.Infof("✔ Submariner engine successfully deployed to %s, ready replicas: %v", cl.ClusterName, deploy.Status.ReadyReplicas)
 					cancel()
 					wg.Done()
 				} else if deploy.Status.ReadyReplicas < int32(cl.NumGateways) {
@@ -732,121 +732,121 @@ func WaitForSubmarinerDeployment(wg *sync.WaitGroup, cl ClusterData, helm HelmDa
 }
 
 //Create tiller deployment
-func CreateTillerDeployment(cls []ClusterData) {
-	for _, cl := range cls {
-		currentDir, _ := os.Getwd()
-		kubeConfigFile := filepath.Join(currentDir, ".config", cl.ClusterName, "auth", "kubeconfig")
-		deployFile := filepath.Join(currentDir, "deploy/tiller/tillerdeploy.json")
-		config, err := clientcmd.BuildConfigFromFlags("", kubeConfigFile)
-		if err != nil {
-			panic(err.Error())
-		}
+func CreateTillerDeployment(wg *sync.WaitGroup, cl ClusterData) {
+	currentDir, _ := os.Getwd()
+	kubeConfigFile := filepath.Join(currentDir, ".config", cl.ClusterName, "auth", "kubeconfig")
+	deployFile := filepath.Join(currentDir, "deploy/tiller/tillerdeploy.json")
+	config, err := clientcmd.BuildConfigFromFlags("", kubeConfigFile)
+	if err != nil {
+		panic(err.Error())
+	}
 
-		clientset, err := kubernetes.NewForConfig(config)
-		if err != nil {
-			panic(err.Error())
-		}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
 
-		file, err := os.Open(deployFile)
-		if err != nil {
-			panic(err.Error())
-		}
-		dec := json.NewDecoder(file)
+	file, err := os.Open(deployFile)
+	if err != nil {
+		panic(err.Error())
+	}
+	dec := json.NewDecoder(file)
 
-		var dep extensionsv1beta1.Deployment
-		err = dec.Decode(&dep)
-		if err != nil {
-			log.Fatal(err)
-		}
+	var dep extensionsv1beta1.Deployment
+	err = dec.Decode(&dep)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-		deploymentsClient := clientset.ExtensionsV1beta1().Deployments("kube-system")
+	deploymentsClient := clientset.ExtensionsV1beta1().Deployments("kube-system")
 
-		result, err := deploymentsClient.Create(&dep)
-		if err != nil && strings.Contains(err.Error(), "already exists") {
-			log.Infof("%s %s", err.Error(), cl.ClusterName)
-		} else if err != nil {
-			log.Fatalf("%s %s", err, cl.ClusterName)
-		} else {
-			log.Infof("Tiller deployed for %s at: %s.", cl.ClusterName, result.CreationTimestamp)
-		}
+	result, err := deploymentsClient.Create(&dep)
+	if err != nil && strings.Contains(err.Error(), "already exists") {
+		log.Infof("✔ %s %s", err.Error(), cl.ClusterName)
+		wg.Done()
+	} else if err != nil {
+		log.Fatalf("%s %s", err, cl.ClusterName)
+	} else {
+		log.Infof("✔ Tiller deployed for %s at: %s.", cl.ClusterName, result.CreationTimestamp)
+		wg.Done()
 	}
 }
 
 //Create tiller service account
-func CreateTillerServiceAccount(cls []ClusterData) {
-	for _, cl := range cls {
-		currentDir, _ := os.Getwd()
-		kubeConfigFile := filepath.Join(currentDir, ".config", cl.ClusterName, "auth", "kubeconfig")
-		deployFile := filepath.Join(currentDir, "deploy/tiller/serviceaccount.json")
-		config, err := clientcmd.BuildConfigFromFlags("", kubeConfigFile)
-		if err != nil {
-			panic(err.Error())
-		}
+func CreateTillerServiceAccount(wg *sync.WaitGroup, cl ClusterData) {
+	currentDir, _ := os.Getwd()
+	kubeConfigFile := filepath.Join(currentDir, ".config", cl.ClusterName, "auth", "kubeconfig")
+	deployFile := filepath.Join(currentDir, "deploy/tiller/serviceaccount.json")
+	config, err := clientcmd.BuildConfigFromFlags("", kubeConfigFile)
+	if err != nil {
+		panic(err.Error())
+	}
 
-		clientset, err := kubernetes.NewForConfig(config)
-		if err != nil {
-			panic(err.Error())
-		}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
 
-		file, err := os.Open(deployFile)
-		if err != nil {
-			panic(err.Error())
-		}
-		dec := json.NewDecoder(file)
+	file, err := os.Open(deployFile)
+	if err != nil {
+		panic(err.Error())
+	}
+	dec := json.NewDecoder(file)
 
-		var sa corev1.ServiceAccount
-		err = dec.Decode(&sa)
-		if err != nil {
-			log.Fatal(err)
-		}
+	var sa corev1.ServiceAccount
+	err = dec.Decode(&sa)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-		result, err := clientset.CoreV1().ServiceAccounts("kube-system").Create(&sa)
-		if err != nil && strings.Contains(err.Error(), "already exists") {
-			log.Infof("%s %s", err.Error(), cl.ClusterName)
-		} else if err != nil {
-			log.Fatalf("%s %s", err, cl.ClusterName)
-		} else {
-			log.Infof("Tiller service account created for %s at: %s", cl.ClusterName, result.CreationTimestamp)
-		}
+	result, err := clientset.CoreV1().ServiceAccounts("kube-system").Create(&sa)
+	if err != nil && strings.Contains(err.Error(), "already exists") {
+		log.Infof("✔ %s %s", err.Error(), cl.ClusterName)
+		wg.Done()
+	} else if err != nil {
+		log.Fatalf("%s %s", err, cl.ClusterName)
+	} else {
+		log.Infof("✔ Tiller service account created for %s at: %s", cl.ClusterName, result.CreationTimestamp)
+		wg.Done()
 	}
 }
 
 //Create tiller cluster role binding
-func CreateTillerClusterRoleBinding(cls []ClusterData) {
-	for _, cl := range cls {
-		currentDir, _ := os.Getwd()
-		kubeConfigFile := filepath.Join(currentDir, ".config", cl.ClusterName, "auth", "kubeconfig")
-		deployFile := filepath.Join(currentDir, "deploy/tiller/clusterrolebinding.json")
-		config, err := clientcmd.BuildConfigFromFlags("", kubeConfigFile)
-		if err != nil {
-			panic(err.Error())
-		}
+func CreateTillerClusterRoleBinding(wg *sync.WaitGroup, cl ClusterData) {
+	currentDir, _ := os.Getwd()
+	kubeConfigFile := filepath.Join(currentDir, ".config", cl.ClusterName, "auth", "kubeconfig")
+	deployFile := filepath.Join(currentDir, "deploy/tiller/clusterrolebinding.json")
+	config, err := clientcmd.BuildConfigFromFlags("", kubeConfigFile)
+	if err != nil {
+		panic(err.Error())
+	}
 
-		clientset, err := kubernetes.NewForConfig(config)
-		if err != nil {
-			panic(err.Error())
-		}
+	clientset, err := kubernetes.NewForConfig(config)
+	if err != nil {
+		panic(err.Error())
+	}
 
-		file, err := os.Open(deployFile)
-		if err != nil {
-			panic(err.Error())
-		}
-		dec := json.NewDecoder(file)
+	file, err := os.Open(deployFile)
+	if err != nil {
+		panic(err.Error())
+	}
+	dec := json.NewDecoder(file)
 
-		var crb rbacv1.ClusterRoleBinding
-		err = dec.Decode(&crb)
-		if err != nil {
-			log.Fatal(err)
-		}
+	var crb rbacv1.ClusterRoleBinding
+	err = dec.Decode(&crb)
+	if err != nil {
+		log.Fatal(err)
+	}
 
-		result, err := clientset.RbacV1().ClusterRoleBindings().Create(&crb)
-		if err != nil && strings.Contains(err.Error(), "already exists") {
-			log.Infof("%s %s", err.Error(), cl.ClusterName)
-		} else if err != nil {
-			log.Fatalf("%s %s", err, cl.ClusterName)
-		} else {
-			log.Infof("Tiller cluster role binding created for %s at: %s", cl.ClusterName, result.CreationTimestamp)
-		}
+	result, err := clientset.RbacV1().ClusterRoleBindings().Create(&crb)
+	if err != nil && strings.Contains(err.Error(), "already exists") {
+		log.Infof("✔ %s %s", err.Error(), cl.ClusterName)
+		wg.Done()
+	} else if err != nil {
+		log.Fatalf("%s %s", err, cl.ClusterName)
+	} else {
+		log.Infof("✔ Tiller cluster role binding created for %s at: %s", cl.ClusterName, result.CreationTimestamp)
+		wg.Done()
 	}
 }
 
@@ -915,20 +915,12 @@ func ExtractInfraDetails(cl ClusterData) []string {
 }
 
 //Run worker creation terraform module
-func CreateTerraformWorkers(wg *sync.WaitGroup, cl ClusterData, ac string) {
-	var status string
-	if ac == "destroy" {
-		status = "destroyed"
-		log.Infof("Destroying workers for %s.", cl.ClusterName)
-	} else {
-		status = "created"
-		log.Infof("Creating workers for %s.", cl.ClusterName)
-	}
-
+func CreateTerraformWorkers(wg *sync.WaitGroup, cl ClusterData) {
+	log.Infof("👷 Creating workers for %s.", cl.ClusterName)
 	results := ExtractInfraDetails(cl)
 	cmdName := "./bin/terraform"
 	cmdArgs := []string{
-		ac, "-target", "module." + cl.ClusterName + "-workers",
+		"apply", "-target", "module." + cl.ClusterName + "-workers",
 		"-var", "aws_region=" + cl.Region,
 		"-var", "infra_id=" + results[0],
 		"-var", "vpc_cidr=" + cl.VpcCidr,
@@ -959,26 +951,18 @@ func CreateTerraformWorkers(wg *sync.WaitGroup, cl ClusterData, ac string) {
 	}).Debugf("%s %s", cl.ClusterName, buf.String())
 
 	output := strings.Split(buf.String(), "\n")
-	log.Infof("Workers were %s for %s: %s", status, cl.ClusterName, output[len(output)-2])
+	log.Infof("✔ Workers were created for %s: %s", cl.ClusterName, output[len(output)-2])
 	wg.Done()
 
 }
 
 //Run infra creation terraform module
-func CreateTerraformInfra(wg *sync.WaitGroup, cl ClusterData, ac string) {
-	var status string
-	if ac == "destroy" {
-		status = "destroyed"
-		log.Infof("Destroying infra for %s.", cl.ClusterName)
-	} else {
-		status = "created"
-		log.Infof("Creating infra for %s.", cl.ClusterName)
-	}
-
+func CreateTerraformInfra(wg *sync.WaitGroup, cl ClusterData) {
+	log.Infof("⛅ Creating infra for %s...", cl.ClusterName)
 	infraDetails := ExtractInfraDetails(cl)
 	cmdName := "./bin/terraform"
 	cmdArgs := []string{
-		ac, "-target", "module." + cl.ClusterName + "-infra",
+		"apply", "-target", "module." + cl.ClusterName + "-infra",
 		"-var", "aws_region=" + cl.Region,
 		"-var", "infra_id=" + infraDetails[0],
 		"-var", "vpc_cidr=" + cl.VpcCidr,
@@ -1008,7 +992,7 @@ func CreateTerraformInfra(wg *sync.WaitGroup, cl ClusterData, ac string) {
 	}).Debugf("%s %s", cl.ClusterName, buf.String())
 
 	output := strings.Split(buf.String(), "\n")
-	log.Infof("Infra was %s for %s: %s", status, cl.ClusterName, output[len(output)-2])
+	log.Infof("✔ Infra was created for %s: %s", cl.ClusterName, output[len(output)-2])
 	wg.Done()
 
 }
@@ -1020,7 +1004,7 @@ func CreateTerraformBootStrap(wg *sync.WaitGroup, cl ClusterData) {
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	_, err := http.Get(strings.Join(consoleUrl, "."))
 	if err != nil {
-		log.Infof("Creating bootstrap infra for %s.", cl.ClusterName)
+		log.Infof("🐙 Creating bootstrap infra for %s.", cl.ClusterName)
 		cmdName := "./bin/terraform"
 		cmdArgs := []string{
 			"apply", "-target", "module." + cl.ClusterName + "-bootstrap",
@@ -1052,17 +1036,17 @@ func CreateTerraformBootStrap(wg *sync.WaitGroup, cl ClusterData) {
 		}).Debugf("%s %s", cl.ClusterName, buf.String())
 
 		output := strings.Split(buf.String(), "\n")
-		log.Infof("Bootstrap infra was created for %s: %s", cl.ClusterName, output[len(output)-2])
+		log.Infof("✔ Bootstrap infra was created for %s: %s", cl.ClusterName, output[len(output)-2])
 		wg.Done()
 	} else {
-		log.Infof("Openshift console is available, skipping bootstrap for %s.", cl.ClusterName)
+		log.Infof("✔ Openshift console is available, skipping bootstrap for %s.", cl.ClusterName)
 		wg.Done()
 	}
 }
 
 //Run bootstrap deletion
 func DestroyTerraformBootStrap(wg *sync.WaitGroup, cl ClusterData) {
-	log.Infof("Destroying bootstrap infra for %s.", cl.ClusterName)
+	log.Infof("💣 Destroying bootstrap infra for %s.", cl.ClusterName)
 	infraDetails := ExtractInfraDetails(cl)
 	cmdName := "./bin/terraform"
 	cmdArgs := []string{
@@ -1095,13 +1079,13 @@ func DestroyTerraformBootStrap(wg *sync.WaitGroup, cl ClusterData) {
 	}).Debugf("%s %s", cl.ClusterName, buf.String())
 
 	output := strings.Split(buf.String(), "\n")
-	log.Infof("Bootstrap infra was destroyed for %s: %s", cl.ClusterName, output[len(output)-2])
+	log.Infof("✔ Bootstrap infra was destroyed for %s: %s", cl.ClusterName, output[len(output)-2])
 	wg.Done()
 }
 
 //Wait for ocp4 install completion
 func WaitForInstallComplete(wg *sync.WaitGroup, cl ClusterData) {
-	log.Infof("Waiting for installation completion %s. Up to 30 minutes.", cl.ClusterName)
+	log.Infof("⌛ Waiting for installation completion %s. Up to 30 minutes.", cl.ClusterName)
 	currentDir, _ := os.Getwd()
 	configDir := filepath.Join(currentDir, ".config", cl.ClusterName)
 	cmdName := "./bin/openshift-install"
@@ -1126,7 +1110,7 @@ func WaitForInstallComplete(wg *sync.WaitGroup, cl ClusterData) {
 		"cluster": cl.ClusterName,
 	}).Debugf("%s %s", cl.ClusterName, buf.String())
 
-	log.Infof("Openshift was installed on %s. Connection details: %s", cl.ClusterName, configDir+"/.openshift_install.log")
+	log.Infof("✔ Openshift was installed on %s. Connection details: %s", cl.ClusterName, configDir+"/.openshift_install.log")
 	wg.Done()
 }
 
@@ -1134,7 +1118,7 @@ func WaitForInstallComplete(wg *sync.WaitGroup, cl ClusterData) {
 func WaitForBootstrap(wg *sync.WaitGroup, cl ClusterData) {
 	currentDir, _ := os.Getwd()
 	configDir := filepath.Join(currentDir, ".config", cl.ClusterName)
-	log.Infof("Waiting for bootstrap completion %s. Up to 60 minutes. Detailed log: %s", cl.ClusterName, configDir+"/.openshift_install.log")
+	log.Infof("⌛ Waiting for bootstrap completion %s. Up to 60 minutes. Detailed log: %s", cl.ClusterName, configDir+"/.openshift_install.log")
 	cmdName := "./bin/openshift-install"
 	cmdArgs := []string{"wait-for", "bootstrap-complete", "--dir", configDir}
 
@@ -1158,7 +1142,7 @@ func WaitForBootstrap(wg *sync.WaitGroup, cl ClusterData) {
 	}).Debugf("%s %s", cl.ClusterName, buf.String())
 
 	output := strings.Split(buf.String(), "\n")
-	log.Infof("Bootstrap was complete for %s: %s", cl.ClusterName, output[len(output)-2])
+	log.Infof("✔ Bootstrap was complete for %s: %s", cl.ClusterName, output[len(output)-2])
 	wg.Done()
 }
 
@@ -1375,84 +1359,108 @@ var clusterCmd = &cobra.Command{
 		GenerateConfigFiles(clusters, authConfig)
 
 		wg.Add(len(clusters))
-		go GenerateManifests(&wg, clusters[0])
-		go GenerateManifests(&wg, clusters[1])
-		go GenerateManifests(&wg, clusters[2])
+		for i := range clusters {
+			go GenerateManifests(&wg, clusters[i])
+		}
 		wg.Wait()
 
 		RemoveMachineSets(clusters)
 
 		wg.Add(len(clusters))
-		go GenerateIgnitionConfigs(&wg, clusters[0])
-		go GenerateIgnitionConfigs(&wg, clusters[1])
-		go GenerateIgnitionConfigs(&wg, clusters[2])
+		for i := range clusters {
+			go GenerateIgnitionConfigs(&wg, clusters[i])
+		}
 		wg.Wait()
 
 		TerraformInit()
 
 		wg.Add(len(clusters))
-		go CreateTerraformInfra(&wg, clusters[0], "apply")
-		go CreateTerraformInfra(&wg, clusters[1], "apply")
-		go CreateTerraformInfra(&wg, clusters[2], "apply")
+		for i := range clusters {
+			go CreateTerraformInfra(&wg, clusters[i])
+		}
 		wg.Wait()
 
 		wg.Add(len(clusters))
-		go CreateTerraformBootStrap(&wg, clusters[0])
-		go CreateTerraformBootStrap(&wg, clusters[1])
-		go CreateTerraformBootStrap(&wg, clusters[2])
+		for i := range clusters {
+			go CreateTerraformBootStrap(&wg, clusters[i])
+		}
 		wg.Wait()
 
 		wg.Add(len(clusters))
-		go WaitForBootstrap(&wg, clusters[0])
-		go WaitForBootstrap(&wg, clusters[1])
-		go WaitForBootstrap(&wg, clusters[2])
+		for i := range clusters {
+			go WaitForBootstrap(&wg, clusters[i])
+		}
 		wg.Wait()
 
 		wg.Add(len(clusters))
-		go CreateTerraformWorkers(&wg, clusters[0], "apply")
-		go CreateTerraformWorkers(&wg, clusters[1], "apply")
-		go CreateTerraformWorkers(&wg, clusters[2], "apply")
+		for i := range clusters {
+			go CreateTerraformWorkers(&wg, clusters[i])
+		}
 		wg.Wait()
 
 		wg.Add(len(clusters))
-		go WaitForInstallComplete(&wg, clusters[0])
-		go WaitForInstallComplete(&wg, clusters[1])
-		go WaitForInstallComplete(&wg, clusters[2])
+		for i := range clusters {
+			go WaitForInstallComplete(&wg, clusters[i])
+		}
 		wg.Wait()
 
 		wg.Add(len(clusters))
-		go DestroyTerraformBootStrap(&wg, clusters[0])
-		go DestroyTerraformBootStrap(&wg, clusters[1])
-		go DestroyTerraformBootStrap(&wg, clusters[2])
+		for i := range clusters {
+			go DestroyTerraformBootStrap(&wg, clusters[i])
+		}
 		wg.Wait()
 
-		CreateTillerServiceAccount(clusters)
-		CreateTillerClusterRoleBinding(clusters)
-		CreateTillerDeployment(clusters)
-		WaitForTillerDeployment(clusters)
+		wg.Add(len(clusters))
+		for i := range clusters {
+			go CreateTillerServiceAccount(&wg, clusters[i])
+		}
+		wg.Wait()
+
+		wg.Add(len(clusters))
+		for i := range clusters {
+			go CreateTillerClusterRoleBinding(&wg, clusters[i])
+		}
+		wg.Wait()
+
+		wg.Add(len(clusters))
+		for i := range clusters {
+			go CreateTillerDeployment(&wg, clusters[i])
+		}
+		wg.Wait()
+
+		wg.Add(len(clusters))
+		for i := range clusters {
+			go WaitForTillerDeployment(&wg, clusters[i])
+		}
+		wg.Wait()
+
 		HelmInit(helmConfig.HelmRepo.URL)
 		InstallSubmarinerBroker(clusters[0], helmConfig.Broker.Namespace)
 
-		wg.Add(len(clusters) - 1)
-		go LabelGatewayNodes(&wg, clusters[1])
-		go LabelGatewayNodes(&wg, clusters[2])
+		wg.Add(len(clusters[1:]))
+		for i := 1; i <= len(clusters[1:]); i++ {
+			go LabelGatewayNodes(&wg, clusters[i])
+		}
 		wg.Wait()
 
-		wg.Add(len(clusters) - 1)
-		go AddSubmarinerSecurityContext(&wg, clusters[1])
-		go AddSubmarinerSecurityContext(&wg, clusters[2])
+		wg.Add(len(clusters[1:]))
+		for i := 1; i <= len(clusters[1:]); i++ {
+			go AddSubmarinerSecurityContext(&wg, clusters[i])
+		}
 		wg.Wait()
 
 		psk := GeneratePsk()
 
-		wg.Add(len(clusters) - 1)
-		go InstallSubmarinerGateway(&wg, clusters[1], clusters[0], helmConfig, psk)
-		go InstallSubmarinerGateway(&wg, clusters[2], clusters[0], helmConfig, psk)
+		wg.Add(len(clusters[1:]))
+		for i := 1; i <= len(clusters[1:]); i++ {
+			go InstallSubmarinerGateway(&wg, clusters[i], clusters[0], helmConfig, psk)
+		}
 		wg.Wait()
 
-		wg.Add(len(clusters) - 1)
-		go WaitForSubmarinerDeployment(&wg, clusters[1], helmConfig)
-		go WaitForSubmarinerDeployment(&wg, clusters[2], helmConfig)
+		wg.Add(len(clusters[1:]))
+		for i := 1; i <= len(clusters[1:]); i++ {
+			go WaitForSubmarinerDeployment(&wg, clusters[i], helmConfig)
+		}
 		wg.Wait()
 
 		ModifyKubeConfigFiles(clusters)

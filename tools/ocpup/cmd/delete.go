@@ -70,9 +70,9 @@ var destroyClustersCmd = &cobra.Command{
 
 		var wg sync.WaitGroup
 		wg.Add(len(clusters))
-		go DeleteCluster(&wg, clusters[0])
-		go DeleteCluster(&wg, clusters[1])
-		go DeleteCluster(&wg, clusters[2])
+		for i := range clusters {
+			go DeleteCluster(&wg, clusters[i])
+		}
 		wg.Wait()
 
 	},

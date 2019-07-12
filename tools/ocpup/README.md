@@ -28,7 +28,7 @@ Create **ocpup.yaml** in the root on the repository. The tool will read **ocpup.
 If the config is placed in other directory, pass the config file location to **ocpup** tool with **--config** flag.
 
 ```bash
-ocpup create cluster --config /path/to/ocpup.yaml
+ocpup create clusters --config /path/to/ocpup.yaml
 ``` 
 
 Config file template:
@@ -86,17 +86,17 @@ helm:
       repository: rancher/submariner-route-agent
       tag: v0.0.1
 authentication:
-  pullSecret: 'xxx'
-  sshKey: xxx
+  pullSecret: '{"auths"...}'
+  sshKey: ssh-rsa xxx
 ```
 
 Important config variables:
 
-| Variable Name | Description                                                                                                              |
-|:------------- |:-------------------------------------------------------------------------------------------------------------------------|
-| dnsDomain     | AWS Route53 hosted zone domain name that you own. If not using openshif-dev account, please create a public hosted zone. | 
-| pullSecret    | Security credentials from [Red Hat portal], please put this credentials in single quotes ''.                             | 
-| sshKey        | SSH pub key from your workstation. Must have the corresponding private key.                                              |
+| Variable Name | Description                                                                                                               |
+|:------------- |:------------------------------------------------------------------------------------------------------------------------- |
+| dnsDomain     | AWS Route53 hosted zone domain name that you own. If not using openshift-dev account, please create a public hosted zone. | 
+| pullSecret    | Security credentials from [Red Hat portal], please put this credentials in single quotes ''.                              | 
+| sshKey        | SSH pub key from your workstation. Must have the corresponding private key.                                               |
 
 Any region is supported as long as it has at least 3 availability zones a,b and c.
 
@@ -128,7 +128,7 @@ ocpup destroy clusters
 
 The deletion process takes up to 45 minutes, please be patient.
 
-**Please remove your resources after you complete the testing.**
+**Please remove your resources after you complete your testing.**
 
 ## VERY IMPORTANT
 
