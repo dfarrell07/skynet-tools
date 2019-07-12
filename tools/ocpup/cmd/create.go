@@ -537,7 +537,7 @@ func LabelGatewayNodes(wg *sync.WaitGroup, cl ClusterData) {
 		if err != nil {
 			panic(err)
 		}
-		log.Infof("✔ Node %s labeled %s", node.Name, cl.ClusterName)
+		log.Infof("✔ Node %s was labeled as gateway %s.", node.Name, cl.ClusterName)
 		wg.Done()
 	}
 }
@@ -666,7 +666,7 @@ func WaitForTillerDeployment(wg *sync.WaitGroup, cl ClusterData) {
 	}
 
 	tillerTimeout := 5 * time.Minute
-	log.Infof("⌛ Waiting up to %v for tiller to be created %s...", tillerTimeout, cl.ClusterName)
+	log.Infof("Waiting up to %v for tiller to be created %s...", tillerTimeout, cl.ClusterName)
 	tillerContext, cancel := context.WithTimeout(ctx, tillerTimeout)
 	deploymentsClient := clientset.ExtensionsV1beta1().Deployments("kube-system")
 	wait.Until(func() {
@@ -704,7 +704,7 @@ func WaitForSubmarinerDeployment(wg *sync.WaitGroup, cl ClusterData, helm HelmDa
 	}
 
 	submarinerTimeout := 5 * time.Minute
-	log.Infof("⌛ Waiting up to %v for submariner engine to be created %s...", submarinerTimeout, cl.ClusterName)
+	log.Infof("Waiting up to %v for submariner engine to be created %s...", submarinerTimeout, cl.ClusterName)
 	submarinerContext, cancel := context.WithTimeout(ctx, submarinerTimeout)
 	deploymentsClient := clientset.ExtensionsV1beta1().Deployments(helm.Engine.Namespace)
 	wait.Until(func() {
@@ -916,7 +916,7 @@ func ExtractInfraDetails(cl ClusterData) []string {
 
 //Run worker creation terraform module
 func CreateTerraformWorkers(wg *sync.WaitGroup, cl ClusterData) {
-	log.Infof("👷 Creating workers for %s.", cl.ClusterName)
+	log.Infof("Creating workers for %s.", cl.ClusterName)
 	results := ExtractInfraDetails(cl)
 	cmdName := "./bin/terraform"
 	cmdArgs := []string{
@@ -958,7 +958,7 @@ func CreateTerraformWorkers(wg *sync.WaitGroup, cl ClusterData) {
 
 //Run infra creation terraform module
 func CreateTerraformInfra(wg *sync.WaitGroup, cl ClusterData) {
-	log.Infof("⛅ Creating infra for %s...", cl.ClusterName)
+	log.Infof("Creating infra for %s.", cl.ClusterName)
 	infraDetails := ExtractInfraDetails(cl)
 	cmdName := "./bin/terraform"
 	cmdArgs := []string{
@@ -1004,7 +1004,7 @@ func CreateTerraformBootStrap(wg *sync.WaitGroup, cl ClusterData) {
 	http.DefaultTransport.(*http.Transport).TLSClientConfig = &tls.Config{InsecureSkipVerify: true}
 	_, err := http.Get(strings.Join(consoleUrl, "."))
 	if err != nil {
-		log.Infof("🐙 Creating bootstrap infra for %s.", cl.ClusterName)
+		log.Infof("Creating bootstrap infra for %s.", cl.ClusterName)
 		cmdName := "./bin/terraform"
 		cmdArgs := []string{
 			"apply", "-target", "module." + cl.ClusterName + "-bootstrap",
@@ -1046,7 +1046,7 @@ func CreateTerraformBootStrap(wg *sync.WaitGroup, cl ClusterData) {
 
 //Run bootstrap deletion
 func DestroyTerraformBootStrap(wg *sync.WaitGroup, cl ClusterData) {
-	log.Infof("💣 Destroying bootstrap infra for %s.", cl.ClusterName)
+	log.Infof("Destroying bootstrap infra for %s.", cl.ClusterName)
 	infraDetails := ExtractInfraDetails(cl)
 	cmdName := "./bin/terraform"
 	cmdArgs := []string{
@@ -1085,7 +1085,7 @@ func DestroyTerraformBootStrap(wg *sync.WaitGroup, cl ClusterData) {
 
 //Wait for ocp4 install completion
 func WaitForInstallComplete(wg *sync.WaitGroup, cl ClusterData) {
-	log.Infof("⌛ Waiting for installation completion %s. Up to 30 minutes.", cl.ClusterName)
+	log.Infof("Waiting for installation completion %s. Up to 30 minutes.", cl.ClusterName)
 	currentDir, _ := os.Getwd()
 	configDir := filepath.Join(currentDir, ".config", cl.ClusterName)
 	cmdName := "./bin/openshift-install"
@@ -1118,7 +1118,7 @@ func WaitForInstallComplete(wg *sync.WaitGroup, cl ClusterData) {
 func WaitForBootstrap(wg *sync.WaitGroup, cl ClusterData) {
 	currentDir, _ := os.Getwd()
 	configDir := filepath.Join(currentDir, ".config", cl.ClusterName)
-	log.Infof("⌛ Waiting for bootstrap completion %s. Up to 60 minutes. Detailed log: %s", cl.ClusterName, configDir+"/.openshift_install.log")
+	log.Infof("Waiting for bootstrap completion %s. Up to 60 minutes. Detailed log: %s", cl.ClusterName, configDir+"/.openshift_install.log")
 	cmdName := "./bin/openshift-install"
 	cmdArgs := []string{"wait-for", "bootstrap-complete", "--dir", configDir}
 
@@ -1464,7 +1464,7 @@ var clusterCmd = &cobra.Command{
 		wg.Wait()
 
 		ModifyKubeConfigFiles(clusters)
-		log.Infof("Kubeconfigs: export KUBECONFIG=$(echo $(git rev-parse --show-toplevel)/tools/ocpup/.config/cluster{1..3}/auth/kubeconfig-dev | sed 's/ /:/g')")
+		log.Infof("✔ Kubeconfigs: export KUBECONFIG=$(echo $(git rev-parse --show-toplevel)/tools/ocpup/.config/cluster{1..3}/auth/kubeconfig-dev | sed 's/ /:/g')")
 	},
 }
 
