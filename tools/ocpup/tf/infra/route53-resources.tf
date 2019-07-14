@@ -21,7 +21,7 @@ resource "aws_route53_record" "api_endpoint" {
   }
 }
 
-# Create hosted private hosted zone
+# Create private hosted zone
 resource "aws_route53_zone" "private_zone" {
   name          = "${local.records_base}.${data.aws_route53_zone.public_zone.name}"
   force_destroy = true

@@ -12,6 +12,7 @@ This tool creates 3 OCP4 clusters on AWS and connects them with submariner.
 ## Build the tool
 
 ```bash
+export GO111MODULE=on
 go mod vendor
 go install -mod vendor
 ```

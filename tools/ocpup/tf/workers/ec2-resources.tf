@@ -23,6 +23,7 @@ data "aws_subnet_ids" "env_vpc_private_subnets" {
   }
 }
 
+# https://github.com/terraform-providers/terraform-provider-aws/issues/7522
 data "aws_subnet" "env_vpc_private_subnet" {
   count = length(data.aws_subnet_ids.env_vpc_private_subnets.ids)
   id    = tolist(data.aws_subnet_ids.env_vpc_private_subnets.ids)[count.index]
