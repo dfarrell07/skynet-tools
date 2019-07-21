@@ -4,27 +4,41 @@ compute:
   - hyperthreading: Enabled
     name: worker
     platform: {}
-    replicas: 0
+    replicas: {{.NumWorkers}}
 controlPlane:
   hyperthreading: Enabled
   name: master
   platform: {}
-  replicas: 1
+  replicas: {{.NumMasters}}
 metadata:
   creationTimestamp: null
   name: {{(.ClusterName)}}
 networking:
   clusterNetwork:
     - cidr: {{.PodCidr}}
+      {{- if (eq .Platform.Name "aws")}}
       hostPrefix: 23
+      {{- end}}
+      {{- if (eq .Platform.Name "openstack")}}
+      hostSubnetLength: 9
+      {{- end}}
   machineCIDR: {{.VpcCidr}}
   networkType: OpenShiftSDN
   serviceNetwork:
     - {{ .SvcCidr }}
 platform:
-  {{- if (eq .Platform "aws")}}
+  {{- if (eq .Platform.Name "aws")}}
   aws:
-    region: {{.Region}}
+    region: {{.Platform.Region}}
+  {{- end}}
+  {{- if (eq .Platform.Name "openstack")}}
+  openstack:
+    cloud: openstack
+      computeFlavor: {{.Platform.ComputeFlavor}}
+      externalNetwork: {{.Platform.ExternalNetwork}}
+      lbFloatingIP: {{.Platform.LbFloatingIP}}
+      region: {{.Platform.Region}}
+      trunkSupport: "1"
   {{- end}}
 pullSecret: '{{.PullSecret}}'
 sshKey: |
