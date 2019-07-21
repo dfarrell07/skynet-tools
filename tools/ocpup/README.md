@@ -124,7 +124,7 @@ After the installation is complete, the export command for kubconfig files will 
 | cluster2     | AWS Gateway | 10.165.0.0/16 | 100.95.0.0/16 | cluster2.devcluster.openshift.com |
 | cluster3     | AWS Gateway | 10.166.0.0/16 | 100.96.0.0/16 | cluster3.devcluster.openshift.com |
 
-## Update submariner deployment
+## Update submariner deployment:
 
 Update submariner resources from config file, the image values will be read from ocpup.yaml.
 ```bash
