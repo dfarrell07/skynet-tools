@@ -36,11 +36,9 @@ Config file template:
 
 ```yaml
 openshift:
-  version: 4.1.4
+  version: 4.1.7
 cluster1:
   clusterName: cluster1
-  platform: aws
-  region: us-east-1
   vpcCidr: 10.164.0.0/16
   podCidr: 10.244.0.0/14
   svcCidr: 100.94.0.0/16
@@ -48,10 +46,11 @@ cluster1:
   numWorkers: 1
   numGateways: 0
   dnsDomain: devcluster.openshift.com
+  platform:
+    name: aws
+    region: us-east-1
 cluster2:
   clusterName: cluster2
-  platform: aws
-  region: us-east-2
   vpcCidr: 10.165.0.0/16
   podCidr: 10.248.0.0/14
   svcCidr: 100.95.0.0/16
@@ -59,10 +58,11 @@ cluster2:
   numWorkers: 1
   numGateways: 1
   dnsDomain: devcluster.openshift.com
+  platform:
+    name: aws
+    region: us-east-2
 cluster3:
   clusterName: cluster3
-  platform: aws
-  region: us-west-2
   vpcCidr: 10.166.0.0/16
   podCidr: 10.252.0.0/14
   svcCidr: 100.96.0.0/16
@@ -70,6 +70,9 @@ cluster3:
   numWorkers: 1
   numGateways: 1
   dnsDomain: devcluster.openshift.com
+  platform:
+    name: aws
+    region: us-west-2
 helm:
   helmRepo:
     url: https://releases.rancher.com/submariner-charts/latest
@@ -120,6 +123,30 @@ After the installation is complete, the export command for kubconfig files will 
 | cluster1     | AWS Broker  | 10.164.0.0/16 | 100.94.0.0/16 | cluster1.devcluster.openshift.com |
 | cluster2     | AWS Gateway | 10.165.0.0/16 | 100.95.0.0/16 | cluster2.devcluster.openshift.com |
 | cluster3     | AWS Gateway | 10.166.0.0/16 | 100.96.0.0/16 | cluster3.devcluster.openshift.com |
+
+## Update submariner deployment
+
+Update submariner resources from config file, the image values will be read from ocpup.yaml.
+```bash
+ocpup update submariner
+```
+
+Update submariner resources from command line.
+```bash
+ocpup update submariner --engine rancher/submariner:v0.0.2 --routeagent rancher/submariner-route-agent:v0.0.2
+```
+
+Reinstall submariner with values from config file, the image values will be read from ocpup.yaml.
+```bash
+ocpup update submariner --reinstall
+```
+
+Reinstall submariner with image values from command line.
+```bash
+ocpup update submariner --engine rancher/submariner:v0.0.2 --routeagent rancher/submariner-route-agent:v0.0.2 --reinstall
+```
+
+If any of the arguments is omitted the values will be taken from ocpup.yaml config file.
 
 ## Destroy clusters:
 

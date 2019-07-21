@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-func DeleteCluster(wg *sync.WaitGroup, cl ClusterData) {
+func (cl ClusterData) DeleteCluster(wg *sync.WaitGroup) {
 	log.Infof("Deleting resources for %s. Please be patient. Up to 45 minutes...", cl.ClusterName)
 	currentDir, _ := os.Getwd()
 	configDir := filepath.Join(currentDir, ".config", cl.ClusterName)
@@ -71,7 +71,7 @@ var destroyClustersCmd = &cobra.Command{
 		var wg sync.WaitGroup
 		wg.Add(len(clusters))
 		for i := range clusters {
-			go DeleteCluster(&wg, clusters[i])
+			go clusters[i].DeleteCluster(&wg)
 		}
 		wg.Wait()
 
