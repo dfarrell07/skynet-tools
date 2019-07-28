@@ -625,6 +625,76 @@ func (cl ClusterData) InstallSubmarinerBroker(h HelmData) {
 	log.Infof("✔ Broker was installed on %s.", cl.ClusterName)
 }
 
+//Install submariner gateway
+func (cl ClusterData) InstallSubmarinerGateway(wg *sync.WaitGroup, broker ClusterData, h HelmData, psk string) {
+	var token string
+	var ca string
+	currentDir, _ := os.Getwd()
+	kubeConfigFile := filepath.Join(currentDir, ".config", cl.ClusterName, "auth", "kubeconfig")
+
+	brokerInfraData := broker.ExtractInfraDetails()
+
+	brokerSecretData, err := broker.ExportBrokerSecretData()
+	if brokerSecretData == nil || err != nil {
+		log.Fatal("Unable to get broker secret data.")
+	}
+
+	for k, v := range brokerSecretData {
+		if k == "token" {
+			token = string(v)
+		} else if k == "ca.crt" {
+			ca = base64.StdEncoding.EncodeToString([]byte(string(v)))
+		}
+	}
+
+	log.Debugf("Installing gateway %s.", cl.ClusterName)
+	brokerUrl := []string{"api", brokerInfraData[2], broker.DNSDomain}
+	cmdName := "./bin/helm"
+	setArgs := []string{
+		"ipsec.psk=" + psk,
+		"broker.server=" + strings.Join(brokerUrl, ".") + ":6443",
+		"broker.token=" + token,
+		"broker.namespace=" + h.Broker.Namespace,
+		"broker.ca=" + ca,
+		"submariner.clusterId=" + cl.ClusterName,
+		"submariner.clusterCidr=" + cl.PodCidr,
+		"submariner.serviceCidr=" + cl.SvcCidr,
+		"submariner.natEnabled=true",
+		"routeAgent.image.repository=" + h.RouteAgent.Image.Repository,
+		"routeAgent.image.tag=" + h.RouteAgent.Image.Tag,
+		"engine.image.repository=" + h.Engine.Image.Repository,
+		"engine.image.tag=" + h.Engine.Image.Tag,
+	}
+	cmdArgs := []string{
+		"install", "--debug", h.HelmRepo.Name + "/submariner",
+		"--name", "submariner",
+		"--namespace", h.Engine.Namespace,
+		"--kubeconfig", kubeConfigFile,
+		"--set", strings.Join(setArgs, ","),
+	}
+
+	cmd := exec.Command(cmdName, cmdArgs...)
+	buf := &bytes.Buffer{}
+	cmd.Stdout = buf
+	cmd.Stderr = buf
+
+	err = cmd.Start()
+	if err != nil {
+		log.Fatalf("Error starting helm: %s %s\n%s", cl.ClusterName, err, buf.String())
+	}
+
+	err = cmd.Wait()
+	if err != nil && !strings.Contains(buf.String(), "already exists") {
+		log.Fatalf("Error waiting for helm: %s %s\n%s", cl.ClusterName, err, buf.String())
+	}
+
+	log.WithFields(log.Fields{
+		"cluster": cl.ClusterName,
+	}).Debugf("%s %s", cl.ClusterName, buf.String())
+	log.Infof("✔ Gateway was installed on %s.", cl.ClusterName)
+	wg.Done()
+}
+
 //Add submariner security policy to gateway node
 func (cl ClusterData) AddSubmarinerSecurityContext(wg *sync.WaitGroup) {
 	currentDir, _ := os.Getwd()
@@ -770,76 +840,6 @@ func (cl ClusterData) PrepareGatewayNodes(wg *sync.WaitGroup) {
 		}
 		wg.Done()
 	}
-}
-
-//Install submariner gateway
-func (cl ClusterData) InstallSubmarinerGateway(wg *sync.WaitGroup, broker ClusterData, h HelmData, psk string) {
-	var token string
-	var ca string
-	currentDir, _ := os.Getwd()
-	kubeConfigFile := filepath.Join(currentDir, ".config", cl.ClusterName, "auth", "kubeconfig")
-
-	brokerInfraData := broker.ExtractInfraDetails()
-
-	brokerSecretData, err := broker.ExportBrokerSecretData()
-	if brokerSecretData == nil || err != nil {
-		log.Fatal("Unable to get broker secret data.")
-	}
-
-	for k, v := range brokerSecretData {
-		if k == "token" {
-			token = string(v)
-		} else if k == "ca.crt" {
-			ca = base64.StdEncoding.EncodeToString([]byte(string(v)))
-		}
-	}
-
-	log.Debugf("Installing gateway %s.", cl.ClusterName)
-	brokerUrl := []string{"api", brokerInfraData[2], broker.DNSDomain}
-	cmdName := "./bin/helm"
-	setArgs := []string{
-		"ipsec.psk=" + psk,
-		"broker.server=" + strings.Join(brokerUrl, ".") + ":6443",
-		"broker.token=" + token,
-		"broker.namespace=" + h.Broker.Namespace,
-		"broker.ca=" + ca,
-		"submariner.clusterId=" + cl.ClusterName,
-		"submariner.clusterCidr=" + cl.VpcCidr,
-		"submariner.serviceCidr=" + cl.SvcCidr,
-		"submariner.natEnabled=true",
-		"routeAgent.image.repository=" + h.RouteAgent.Image.Repository,
-		"routeAgent.image.tag=" + h.RouteAgent.Image.Tag,
-		"engine.image.repository=" + h.Engine.Image.Repository,
-		"engine.image.tag=" + h.Engine.Image.Tag,
-	}
-	cmdArgs := []string{
-		"install", "--debug", h.HelmRepo.Name + "/submariner",
-		"--name", "submariner",
-		"--namespace", h.Engine.Namespace,
-		"--kubeconfig", kubeConfigFile,
-		"--set", strings.Join(setArgs, ","),
-	}
-
-	cmd := exec.Command(cmdName, cmdArgs...)
-	buf := &bytes.Buffer{}
-	cmd.Stdout = buf
-	cmd.Stderr = buf
-
-	err = cmd.Start()
-	if err != nil {
-		log.Fatalf("Error starting helm: %s %s\n%s", cl.ClusterName, err, buf.String())
-	}
-
-	err = cmd.Wait()
-	if err != nil && !strings.Contains(buf.String(), "already exists") {
-		log.Fatalf("Error waiting for helm: %s %s\n%s", cl.ClusterName, err, buf.String())
-	}
-
-	log.WithFields(log.Fields{
-		"cluster": cl.ClusterName,
-	}).Debugf("%s %s", cl.ClusterName, buf.String())
-	log.Infof("✔ Gateway was installed on %s.", cl.ClusterName)
-	wg.Done()
 }
 
 //Export submariner broker ca and token
