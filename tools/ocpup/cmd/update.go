@@ -21,7 +21,7 @@ var (
 )
 
 // Delete submariner helm resources
-func (cl ClusterData) DeleteSubmariner(ns string) {
+func (cl *ClusterData) DeleteSubmariner(ns string) {
 	currentDir, _ := os.Getwd()
 	kubeConfigFile := filepath.Join(currentDir, ".config", cl.ClusterName, "auth", "kubeconfig")
 	cmdName := "./bin/helm"
@@ -49,7 +49,7 @@ func (cl ClusterData) DeleteSubmariner(ns string) {
 }
 
 // Delete submariner CRDs
-func (cl ClusterData) DeleteSubmarinerCrd() {
+func (cl *ClusterData) DeleteSubmarinerCrd() {
 	currentDir, _ := os.Getwd()
 	kubeConfigFile := filepath.Join(currentDir, ".config", cl.ClusterName, "auth", "kubeconfig")
 	cmdName := "./bin/oc"
@@ -78,7 +78,7 @@ func (cl ClusterData) DeleteSubmarinerCrd() {
 	log.Infof("✔ Submariner CRDs were removed from %s.", cl.ClusterName)
 }
 
-func (cl ClusterData) UpdateEngineDeployment(h HelmData) {
+func (cl *ClusterData) UpdateEngineDeployment(h *HelmData) {
 	currentDir, _ := os.Getwd()
 	kubeConfigFile := filepath.Join(currentDir, ".config", cl.ClusterName, "auth", "kubeconfig")
 	config, err := clientcmd.BuildConfigFromFlags("", kubeConfigFile)
@@ -110,7 +110,7 @@ func (cl ClusterData) UpdateEngineDeployment(h HelmData) {
 	log.Infof("✔ Submariner engine deployment for %s was updated with image: %s.", cl.ClusterName, image)
 }
 
-func (cl ClusterData) UpdateRouteAgentDaemonSet(h HelmData) {
+func (cl *ClusterData) UpdateRouteAgentDaemonSet(h *HelmData) {
 	currentDir, _ := os.Getwd()
 	kubeConfigFile := filepath.Join(currentDir, ".config", cl.ClusterName, "auth", "kubeconfig")
 	config, err := clientcmd.BuildConfigFromFlags("", kubeConfigFile)
@@ -159,7 +159,7 @@ var updateSubmarinerCmd = &cobra.Command{
 
 		var wg sync.WaitGroup
 
-		GetDependencies(openshiftConfig)
+		GetDependencies(&openshiftConfig)
 
 		if EngineImage != "" {
 			helmConfig.Engine.Image.Repository = strings.Split(EngineImage, ":")[0]
@@ -171,7 +171,7 @@ var updateSubmarinerCmd = &cobra.Command{
 			helmConfig.RouteAgent.Image.Tag = strings.Split(RouteAgentImage, ":")[1]
 		}
 
-		if Reinstall == true {
+		if Reinstall {
 			log.Warn("Reinstalling submariner.")
 			clusters[0].DeleteSubmariner(helmConfig.Broker.Namespace)
 			clusters[0].DeleteSubmarinerCrd()
@@ -182,25 +182,25 @@ var updateSubmarinerCmd = &cobra.Command{
 			}
 
 			HelmInit(helmConfig.HelmRepo.URL)
-			clusters[0].InstallSubmarinerBroker(helmConfig)
+			clusters[0].InstallSubmarinerBroker(&helmConfig)
 
 			psk := GeneratePsk()
 
 			wg.Add(len(clusters[1:]))
 			for i := 1; i <= len(clusters[1:]); i++ {
-				go clusters[i].InstallSubmarinerGateway(&wg, clusters[0], helmConfig, psk)
+				go clusters[i].InstallSubmarinerGateway(&wg, &clusters[0], &helmConfig, psk)
 			}
 			wg.Wait()
 
 			wg.Add(len(clusters[1:]))
 			for i := 1; i <= len(clusters[1:]); i++ {
-				go clusters[i].WaitForSubmarinerDeployment(&wg, helmConfig)
+				go clusters[i].WaitForSubmarinerDeployment(&wg, &helmConfig)
 			}
 			wg.Wait()
 		} else {
 			for i := 1; i <= len(clusters[1:]); i++ {
-				clusters[i].UpdateEngineDeployment(helmConfig)
-				clusters[i].UpdateRouteAgentDaemonSet(helmConfig)
+				clusters[i].UpdateEngineDeployment(&helmConfig)
+				clusters[i].UpdateRouteAgentDaemonSet(&helmConfig)
 			}
 		}
 

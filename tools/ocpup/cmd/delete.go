@@ -10,7 +10,7 @@ import (
 	"sync"
 )
 
-func (cl ClusterData) DeleteCluster(wg *sync.WaitGroup) {
+func (cl *ClusterData) DeleteCluster(wg *sync.WaitGroup) {
 	log.Infof("Deleting resources for %s. Please be patient. Up to 45 minutes...", cl.ClusterName)
 	currentDir, _ := os.Getwd()
 	configDir := filepath.Join(currentDir, ".config", cl.ClusterName)
@@ -66,7 +66,7 @@ var destroyClustersCmd = &cobra.Command{
 			log.Fatal(err)
 		}
 
-		GetDependencies(openshiftConfig)
+		GetDependencies(&openshiftConfig)
 
 		var wg sync.WaitGroup
 		wg.Add(len(clusters))
