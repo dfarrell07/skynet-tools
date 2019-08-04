@@ -46,7 +46,11 @@
     --set submariner.clusterId="{{ cluster_name }}" \
     --set submariner.clusterCidr="{{ pod_cidr }}" \
     --set submariner.serviceCidr="{{ service_cidr }}" \
-    --set submariner.natEnabled="true"
+    --set submariner.natEnabled="true" \
+    --set routeAgent.image.repository="quay.io/submariner/submariner-route-agent" \
+    --set routeAgent.image.tag="latest" \
+    --set engine.image.repository="quay.io/submariner/submariner" \
+    --set engine.image.tag="latest"
   register: gateway_result
   changed_when: "'created' in result.stdout"
   failed_when: "result.rc != 0 and 'submariner already exists' not in result.stderr"
