@@ -1200,7 +1200,7 @@ func (cl *ClusterData) CreateTerraformInfra(v *OpenshiftData, wg *sync.WaitGroup
 }
 
 //Run bootstrap creation terraform module
-func (cl ClusterData) CreateTerraformBootStrap(v *OpenshiftData, wg *sync.WaitGroup) {
+func (cl *ClusterData) CreateTerraformBootStrap(v *OpenshiftData, wg *sync.WaitGroup) {
 	release := strings.Join(strings.Split(strings.Split(v.Version, "-")[0], ".")[:2], ".")
 	infraDetails := cl.ExtractInfraDetails()
 	consoleUrl := []string{"https://console-openshift-console.apps", infraDetails[2], cl.DNSDomain}
@@ -1249,7 +1249,7 @@ func (cl ClusterData) CreateTerraformBootStrap(v *OpenshiftData, wg *sync.WaitGr
 }
 
 //Run bootstrap deletion
-func (cl ClusterData) DestroyTerraformBootStrap(v *OpenshiftData, wg *sync.WaitGroup) {
+func (cl *ClusterData) DestroyTerraformBootStrap(v *OpenshiftData, wg *sync.WaitGroup) {
 	release := strings.Join(strings.Split(strings.Split(v.Version, "-")[0], ".")[:2], ".")
 	log.Infof("Destroying bootstrap infra for %s.", cl.ClusterName)
 	infraDetails := cl.ExtractInfraDetails()
@@ -1290,7 +1290,7 @@ func (cl ClusterData) DestroyTerraformBootStrap(v *OpenshiftData, wg *sync.WaitG
 }
 
 //Wait for ocp4 install completion
-func (cl ClusterData) WaitForInstallComplete(wg *sync.WaitGroup) {
+func (cl *ClusterData) WaitForInstallComplete(wg *sync.WaitGroup) {
 	log.Infof("Waiting for installation completion %s. Up to 30 minutes.", cl.ClusterName)
 	currentDir, _ := os.Getwd()
 	configDir := filepath.Join(currentDir, ".config", cl.ClusterName)
@@ -1321,7 +1321,7 @@ func (cl ClusterData) WaitForInstallComplete(wg *sync.WaitGroup) {
 }
 
 //Wait for bootstrap completion
-func (cl ClusterData) WaitForBootstrap(wg *sync.WaitGroup) {
+func (cl *ClusterData) WaitForBootstrap(wg *sync.WaitGroup) {
 	currentDir, _ := os.Getwd()
 	configDir := filepath.Join(currentDir, ".config", cl.ClusterName)
 	log.Infof("Waiting for bootstrap completion %s. Up to 60 minutes. Detailed log: %s", cl.ClusterName, configDir+"/.openshift_install.log")
@@ -1353,7 +1353,7 @@ func (cl ClusterData) WaitForBootstrap(wg *sync.WaitGroup) {
 }
 
 //Generate ignition configs
-func (cl ClusterData) GenerateIgnitionConfigs(wg *sync.WaitGroup) {
+func (cl *ClusterData) GenerateIgnitionConfigs(wg *sync.WaitGroup) {
 	currentDir, _ := os.Getwd()
 	configDir := filepath.Join(currentDir, ".config", cl.ClusterName)
 	if cl.Platform.Name == "aws" {
@@ -1383,7 +1383,7 @@ func (cl ClusterData) GenerateIgnitionConfigs(wg *sync.WaitGroup) {
 }
 
 //Generate manifests
-func (cl ClusterData) GenerateManifests(wg *sync.WaitGroup) {
+func (cl *ClusterData) GenerateManifests(wg *sync.WaitGroup) {
 	currentDir, _ := os.Getwd()
 	configDir := filepath.Join(currentDir, ".config", cl.ClusterName)
 	if cl.Platform.Name == "aws" {
