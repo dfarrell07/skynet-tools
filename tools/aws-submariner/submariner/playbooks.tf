@@ -34,7 +34,7 @@ resource "null_resource" "run_ansible" {
         -i ./ansible/tmp/inventory-submariner-${var.cluster_name}.yml \
         --extra-vars "aws_ssh_user=${var.aws_ssh_user} cluster_name=${var.cluster_name}\
         gateway_node=${var.gateway_node} network_cidr=${data.aws_vpc.env_vpc.cidr_block} \
-        service_cidr=${var.service_cidr}"
+        service_cidr=${var.service_cidr} pod_cidr=${var.pod_cidr}"
    EOT
   }
 

@@ -10,6 +10,10 @@ variable "service_cidr" {
   description = "Kubernetes service cidr."
 }
 
+variable "pod_cidr" {
+  description = "Cluster pod Cidr"
+}
+
 variable "aws_ssh_user" {
   description = "User ssh access."
   default     = "centos"
