@@ -4,3 +4,4 @@
 __pycache__
 *.terraform*
 ansible/tmp/*
+*tfstate*

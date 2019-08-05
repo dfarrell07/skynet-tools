@@ -12,8 +12,6 @@ clouds.yml
 
 *idea*
 
-*tfstate*
-
 # Secrets for RDO Cloud, personal instance of rdo_vm.example
 ansible/group_vars/rdo-vm
 
