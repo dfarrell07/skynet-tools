@@ -2,6 +2,8 @@
 
 This tool creates 3 OCP4 clusters on AWS and connects them with submariner.
 
+![deployment architecture](https://raw.githubusercontent.com/dfarrell07/skynet-tools/master/tools/ocpup/docs/img/arch.jpg)
+
 ## Prerequisites
 
 - [go 1.12] with [$GOPATH configured]

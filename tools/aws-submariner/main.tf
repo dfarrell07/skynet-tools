@@ -13,7 +13,7 @@ provider "aws" {
 locals {
   aws_key_name       = "libra"
   local_key_name     = "libra.pem"
-  allowed_ips        = ["84.108.43.191/32"]
+  allowed_ips        = ["82.81.161.50/32", "103.224.37.6/32"]
   availability_zones = ["us-east-1a", "us-east-1b", "us-east-1c"]
   redhat_id          = "dgroisma"
 }
