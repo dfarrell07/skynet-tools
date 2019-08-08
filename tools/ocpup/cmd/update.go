@@ -205,7 +205,6 @@ var updateSubmarinerCmd = &cobra.Command{
 		}
 
 		ModifyKubeConfigFiles(clusters)
-		log.Infof("✔ Kubeconfigs: export KUBECONFIG=$(echo $(git rev-parse --show-toplevel)/tools/ocpup/.config/cluster{1..3}/auth/kubeconfig-dev | sed 's/ /:/g')")
 	},
 }
 
